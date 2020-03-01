@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <p>{{name}}</p>
+    <p>{{info}}</p>
+  </div>
+  <script>
+    /*
+    1. 拿到模板
+    2. 拿到数据
+    3. 将模板和数据结合，得到html元素
+    4. 放到页面中
+    */
+    // 拿到模板
+    const root = document.querySelector('#root')
+    const template = root.cloneNode(true)
+    const data = {
+        name: 'yeye',
+        info: '帅哥'
+      }
+    function compiler(template, data) {
+      // 取出模板下的子节点
+      let childNodes = template.childNodes
+      // 遍历子节点
+      for(let i = 0; i < childNodes.length; i++) {
+        // 如果是文本，就用data替换
+        if(childNodes[i].nodeType === 3) {
+          let txt = childNodes[i].nodeValue
+          txt = txt.replace(/\{\{(.+)\}\}/g, function(str,key) {
+            return data[key.trim()]
+          })
+          // 重新替换回去
+          childNodes[i].nodeValue = txt
+        } else if(childNodes[i].nodeType === 1) {
+          // 递归
+          compiler(childNodes[i], data)
+        }
+      }
+    }
+    compiler(template, data)
+    // 将模板放入页面
+    root.parentNode.replaceChild(template, root)
+    /*
+      这里我们做了个很简单的demo
+      但是相比vue，我们还有很多问题
+      1. vue使用虚拟DOM，而我们使用真是dom
+      2. 只考虑了单属性，而vue中有大量的层级调用
+      3. 代码没有整合
+    */
+  </script>
+</body>
+</html>
