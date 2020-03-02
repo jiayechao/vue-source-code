@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <p>{{name.firstname}}</p>
+    <p>{{name.lastname}}</p>
+    <p>{{info}}</p>
+  </div>
+  <script>
+  /*
+  在03中我们简单封装了Gvue，这一次我们实现多属性的插值
+  */
+  /*
+  @params <obj>
+  @params <path> 
+  */
+  function getDeepValue(obj, path) {
+    const paths = path.split('.')
+    let prop
+    let res = obj
+    while( prop = paths.shift()) {
+      res = res[prop]
+    }
+    return res
+  }
+  /*
+  上面的函数可以是哟个柯里化提升一性能
+  */
+  function getDeepValueByPath(path) {
+    const paths = path.split('.')
+    return function(obj) {
+      let prop
+      let res = obj
+      while( prop = paths.shift()) {
+        res = res[prop]
+      }
+      return res
+    }
+  }
+  function GVue(options) {
+    // 获取数据，模板
+    this._data = options.data
+    this._el = options.el
+    this.$el = this._templateDOM = document.querySelector(this._el)
+    this._parent = this._templateDOM.parentNode
+    // 渲染模板
+    this.render()
+  }
+  GVue.prototype.render = function() {
+    // 编译，将数据和模板结合
+    const realHTMLDOM = this._templateDOM.cloneNode(true) // 拷贝一个准DOM,因为我们的模板不会变，所以要复制出来
+    this.compiler(realHTMLDOM, this._data) // 编译
+    this.update(realHTMLDOM) // 替换
+  }
+  GVue.prototype.compiler = function(template, data) {
+    // 取出模板下的子节点
+    let childNodes = template.childNodes
+    // 遍历子节点
+    for(let i = 0; i < childNodes.length; i++) {
+      // 如果是文本，就用data替换
+      if(childNodes[i].nodeType === 3) {
+        let txt = childNodes[i].nodeValue
+        txt = txt.replace(/\{\{(.+)\}\}/g, function(str,key) {
+          // return data[key.trim()]
+          return getDeepValueByPath(key.trim())(data)
+        })
+        // 重新替换回去
+        childNodes[i].nodeValue = txt
+      } else if(childNodes[i].nodeType === 1) {
+        // 递归
+        this.compiler(childNodes[i], data)
+      }
+    }
+  }
+  // 渲染到页面中去
+  GVue.prototype.update = function(real) {
+    this._parent.replaceChild(real, document.querySelector(this._el))
+  }
+  let app = new GVue({
+    el: '#root',
+    data: {
+      name: {
+        firstname: 'jia',
+        lastname: 'yeye'
+      },
+      info: '帅哥'
+    }
+  })
+  /*
+    如何将真正的DOM转为虚拟DOM
+    如何将虚拟DOM转为真正的DOM
+    看05-html
+  */
+  </script>
+</body>
+</html>
