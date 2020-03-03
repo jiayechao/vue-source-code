@@ -7,12 +7,12 @@
 </head>
 <body>
   <div id="root">
-    <p>yeye</p>
+    <p class="name">yeye</p>
   </div>
   <script>
     class VNode {
       constructor(tag, value, data, type) {
-        this.tag = tag ? tag.toLowerCase() : undefined
+        this.tag = tag && tag.toLowerCase()
         this.value = value
         this.data = data
         this.children= []
@@ -47,8 +47,28 @@
       }
       return _vnode
     }
-
-    console.log(getVNode(document.querySelector('#root')))
+    // 将vnode转为dom
+    function getRDOM(vnode) {
+      let _rnode
+      if(vnode.type === 3) {
+        _rnode = document.createTextNode(vnode.value)
+      } else if (vnode.type === 1) {
+        const childNodes = vnode.children
+        _rnode = document.createElement(vnode.tag)
+        for(let i in vnode.data){
+          _rnode.setAttribute(i, vnode.data[i])
+        }
+        for(let i = 0; i < childNodes.length; i++) {
+          const childNode = getRDOM(childNodes[i])
+          _rnode.insertBefore(childNode, null)
+        }
+      }
+      return _rnode
+    }
+    const vnode = getVNode(document.querySelector('#root'))
+    console.log(vnode)
+    const rnode = getRDOM(vnode)
+    console.log(rnode)
   </script>
 </body>
 </html>

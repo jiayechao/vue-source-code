@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function GVue(options) {
+      this._data = options.data
+      this._el = options.el
+    }
+
+    GVue.prototype.mount = function() {
+      // 这里我们提供一个render来生成虚拟dom. 并且缓存
+      this.render = this.createRenderFn()
+      this.mountComponent()
+    }
+    Gvue.prototype.mountComponent = function() {
+      // 这里我们执行一个mount函数
+      let mount = () => {
+        this.update(this.render())
+      }
+      mount.call(this)
+    }
+
+    // 这里生成render函数，我们需要缓存虚拟dom
+    Gvue.prototype.createRenderFn = function() {
+
+    }
+
+    // 将虚拟dom渲染渲染到页面中，diff算法就在这里
+    Gvue.prototype.update = function() {
+
+    }
+  </script>
+</body>
+</html>
