@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    var obj = {
+      reactive: 'bilibili'
+    }
+
+    obj.name = 'yeye'
+
+    Object.defineProperty(obj, 'age', {
+      writable: true, // 默认是false
+      configurable: true,// 默认是false
+      enumerable: false,// 默认是false
+      value: 19
+    }) 
+    Object.defineProperty(obj, 'sex', {
+      configurable: true,// 默认是false
+      enumerable: true,// 默认是false
+      get() {
+        return '男'
+      },
+      set(sex) {
+        this.set = sex
+      }
+    })
+
+    // vue如何收集data，并将它转成响应式的呢
+    function defineReactive(target, key, value, enumerable) {
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: !!enumerable,
+        get() {
+          return value
+        },
+        set(newVal) {
+          value = newVal
+        }
+      })
+    }
+    // 这样我们在取值，赋值时就能做一些别的操作
+    Object.keys(obj).forEach(key => {
+      defineReactive(obj, key, obj[key], true)
+    })
+  </script>
+</body>
+</html>

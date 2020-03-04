@@ -30,6 +30,13 @@ console.log(root)
 
 那么在我们的代码中[02-index.html](./demos/02-index.html)，每一个watch改变，computed的改变都会重新渲染（render）页面，也就会重新生成虚拟dom（我们没有抽象语法树，简化成虚拟dom），所以我们需要一些优化。
 
-既然模板时不变的，那么我们就可以用闭包缓存起来[07-index.html](./demos/07-index.html)
+既然模板是不变的，那么我们就可以用闭包缓存起来[07-index.html](./demos/07-index.html)
 
 ### 数据驱动
+
+我们在改变data中的数据时，页面的数据会改变，我们怎么做到呢[08-index.html](./demos/08-index.html)
+
+可以先看一个小demo
+```javascript
+Object.defineProperty(obj, proty, option)
+```
