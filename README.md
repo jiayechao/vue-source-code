@@ -36,7 +36,12 @@ console.log(root)
 
 我们在改变data中的数据时，页面的数据会改变，我们怎么做到呢[08-index.html](./demos/08-index.html)
 
-可以先看一个小demo
-```javascript
-Object.defineProperty(obj, proty, option)
-```
+上面我们只做到对象和基本类型的响应化，但是如果有数组的非变异方法，比如push，pop等之类的，我们还没做到
+请看[09-index.html](./demos/09-index.html)
+
+如何拓展一个已经定义的函数的功能：
+  1. 定义一个变量指向函数
+  2. 重新定义原来的函数
+  3. 拓展功能
+  4. 调用变量指向的函数
+我们就可以通过修改响应式数组原型上的push方法
