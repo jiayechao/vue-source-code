@@ -8,7 +8,16 @@
 <body>
   <script>
     var obj = {
-      reactive: 'bilibili'
+      reactive: 'bilibili',
+      deep: {
+        toc: 1,
+        aaa: null,
+        ccc: [
+          {
+            ddd: 111
+          }
+        ]
+      }
     }
 
     obj.name = 'yeye'
@@ -32,21 +41,40 @@
 
     // vue如何收集data，并将它转成响应式的呢
     function defineReactive(target, key, value, enumerable) {
+      // 如果value是一个对象, 我们要深入对象里面
+      if(typeof value === 'object' && value !== null) {
+        watch(value)
+      }
+      // 响应化
       Object.defineProperty(target, key, {
         configurable: true,
         enumerable: !!enumerable,
         get() {
+          console.log('获取了！！！', value)
           return value
         },
         set(newVal) {
+          console.log('赋值了！！！', newVal)
           value = newVal
         }
       })
+      
     }
     // 这样我们在取值，赋值时就能做一些别的操作
-    Object.keys(obj).forEach(key => {
-      defineReactive(obj, key, obj[key], true)
-    })
+    function watch(obj) {
+      Object.keys(obj).forEach(key => {
+        // 是否数组，如果是数组就要循环
+        if(Array.isArray(obj[key])) {
+          obj[key].forEach(item => {
+            watch(item)
+          })
+        }
+        // 如果是基本数据类型或者对象，就响应化
+        defineReactive(obj, key, obj[key], true)
+      })
+    }
+
+    watch(obj)
   </script>
 </body>
 </html>
