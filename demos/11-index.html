@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="root">
+    <p>{{name.firstname}}</p>
+    <p>{{name.lastname}}</p>
+    <p>{{info}}</p>
+  </div>
+  <script>
+    let ARRAY_METHOD = [
+      'push',
+      'pop'
+    ]
+    let newArray = Object.create(Array.prototype) // 创建一个对象，继承自数组原型
+    
+    ARRAY_METHOD.forEach(method => {
+      newArray[method] = function() {
+        console.log(`调用了${method}方法`)
+        for(let i = 0; i < arguments.length; i++) {
+          watch(arguments[i])
+        }
+        return Array.prototype[method].apply(this, arguments)
+      }
+    })
+
+    // vue如何收集data，并将它转成响应式的呢
+    function defineReactive(target, key, value, enumerable) {    
+      var that = this
+      // 如果value是一个对象, 我们要深入对象里面
+      if(typeof value === 'object' && value !== null) {
+        watch(value, that)
+      }
+      // 响应化
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: !!enumerable,
+        get() {
+          console.log(`读取 ${key} 属性`)
+          return value
+        },
+        set(newVal) {
+          console.log(`设置 ${key} 属性为: ${newVal}`)
+          value = newVal
+          // 赋值时，重新调用render
+          that.mountComponent()
+        }
+      })
+      
+    }
+    // 这样我们在取值，赋值时就能做一些别的操作
+    function watch(obj, vm) {
+      Object.keys(obj).forEach(key => {
+        // 是否数组，如果是数组就要循环
+        if(Array.isArray(obj[key])) {
+          // 这里处理将push等方法变成响应式
+          obj[key].__proto__ = newArray
+          obj[key].forEach(item => {
+            watch(item, vm)
+          })
+        } else {
+          // 如果是基本数据类型或者对象，就响应化
+          // 将vm实例传入
+          defineReactive.call(vm, obj, key, obj[key], true)
+        }
+      })
+    }
+    /* 生成虚拟dom */
+    class VNode {
+      constructor(tag, value, data, type) {
+        this.tag = tag && tag.toLowerCase()
+        this.value = value
+        this.data = data
+        this.children= []
+        this.type = type
+      }
+      // 添加节点
+      appendChild(vnode) {
+        this.children.push(vnode)
+      }
+    }
+
+    // 将真是Dom转成虚拟dom
+    function getVNode(node) {
+      let nodeType = node.nodeType
+      let _vnode = null
+      if(nodeType === 1) {
+        let tag = node.nodeName // tag
+        let attrs = node.attributes // 所有的属性
+        let arrtObj = {} // data
+        for(let i = 0; i < attrs.length; i++) {
+          arrtObj[attrs[i].nodeName] = attrs[i].nodeValue
+        }
+        
+        _vnode = new VNode(tag, undefined, arrtObj, nodeType)
+        // 找出子节点
+        const childNodes = node.childNodes
+        for(let i = 0; i < childNodes.length; i++) {
+          _vnode.appendChild(getVNode(childNodes[i])) // 递归
+        }
+      } else if(nodeType === 3) {
+        _vnode = new VNode(undefined, node.nodeValue, undefined, nodeType)
+      }
+      return _vnode
+    }
+    // 将vnode转为dom
+    function getRDOM(vnode) {
+      let _rnode
+      if(vnode.type === 3) {
+        _rnode = document.createTextNode(vnode.value)
+      } else if (vnode.type === 1) {
+        const childNodes = vnode.children
+        _rnode = document.createElement(vnode.tag)
+        for(let i in vnode.data){
+          _rnode.setAttribute(i, vnode.data[i])
+        }
+        for(let i = 0; i < childNodes.length; i++) {
+          const childNode = getRDOM(childNodes[i])
+          _rnode.insertBefore(childNode, null)
+        }
+      }
+      return _rnode
+    }
+
+    /* 将vnode和template结合生成填充数据的vnode */
+    function getDeepValueByPath(path) {
+      const paths = path.split('.')
+      return function(obj) {
+        let prop
+        let res = obj
+        while( prop = paths.shift()) {
+          res = res[prop]
+        }
+        return res
+      }
+    }
+    function compiler(vnode, data) {
+      let _type = vnode.type
+      let _data = vnode.data
+      let _value = vnode.value
+      let _tag = vnode.tag
+      let _children = vnode.children
+
+      let _vnode = null
+      if(_type === 1) {
+        _vnode = new VNode(_tag, _value, _data, _type)
+        _children.forEach(_subVnode => {
+          let child = compiler(_subVnode, data)
+          _vnode.appendChild(child)
+        });
+      } else {
+        // 文本处理
+        _value = _value ? _value.replace(/\{\{(.+)\}\}/g, function(str,key) {
+          return getDeepValueByPath(key.trim())(data)
+        }) : _value
+        _vnode = new VNode(_tag, _value, _data, _type)
+      }
+      return _vnode
+    }
+    function GVue(options) {
+      this._data = options.data
+      // 将data响应化
+      watch(this._data, this)
+      let elm = document.querySelector( options.el ); // vue 是字符串, 这里是 DOM 
+      this._template = elm;
+      this._el = options.el
+      // this._template = document.querySelector(options.el)
+      this._parentNode = elm.parentNode
+    }
+
+    GVue.prototype.mount = function() {
+      // 这里我们提供一个render来生成虚拟dom. 并且缓存，vue也有，这里我们简单点
+      this.render = this.createRenderFn()
+      this.mountComponent()
+      return this
+    }
+    GVue.prototype.mountComponent = function() {
+      // 这里我们执行一个mount函数
+      let mount = () => {
+        this.update(this.render())
+      }
+      mount() // 本质应该交给watcher去执行
+    }
+
+    // 这里生成render函数，我们需要缓存虚拟dom
+    GVue.prototype.createRenderFn = function() {
+      // 缓存ast，这里我们用vnode代替
+      let ast = getVNode(this._template)
+      console.log(ast)
+      // vnode + data => 含有数据的vnode
+      return function render() {
+        let _tmp = compiler(ast, this._data)
+        return _tmp
+      }
+    }
+
+    // 将虚拟dom渲染渲染到页面中，diff算法就在这里
+    GVue.prototype.update = function(vnodeData) {
+      // 这个写法很不负责的哦
+      // this._parentNode.replaceChild(getRDOM(vnodeData), this._template)
+      // 上面的被注释是有问题的，因为重新渲染时，this._template指向的是模板，所以要重新获取被替换的dom
+      this._parentNode.replaceChild(getRDOM(vnodeData), document.querySelector( '#root' ))
+      
+    }
+
+    let data = {
+        name: {
+          firstname: 'jia',
+          lastname: 'yeye' 
+        },
+        info: '大帅哥'
+      }
+    let vm = new GVue({
+      el: '#root',
+      data,
+    }).mount()
+  </script>
+</body>
+</html>

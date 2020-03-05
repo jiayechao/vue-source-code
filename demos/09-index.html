@@ -7,79 +7,24 @@
 </head>
 <body>
   <script>
-    var obj = {
-      reactive: 'bilibili',
-      deep: {
-        toc: 1,
-        aaa: null,
-        ccc: [
-          {
-            ddd: 111
-          },
-          {
-            eee: 222
-          }
-        ]
-      }
-    }
+    let ARRAY_METHOD = [
+      'push',
+      'pop'
+    ]
 
-    obj.name = 'yeye'
+    let arr = []
 
-    Object.defineProperty(obj, 'age', {
-      writable: true, // 默认是false
-      configurable: true,// 默认是false
-      enumerable: false,// 默认是false
-      value: 19
-    }) 
-    Object.defineProperty(obj, 'sex', {
-      configurable: true,// 默认是false
-      enumerable: true,// 默认是false
-      get() {
-        return '男'
-      },
-      set(sex) {
-        this.set = sex
+    let newArray = Object.create(Array.prototype) // 创建一个对象，继承自数组原型
+    arr.__proto__ = newArray
+    ARRAY_METHOD.forEach(method => {
+      newArray[method] = function() {
+        console.log(`调用了${method}方法`)
+        // 这里就能将数据响应式化
+        return Array.prototype[method].apply(this, arguments)
       }
     })
 
-    // vue如何收集data，并将它转成响应式的呢
-    function defineReactive(target, key, value, enumerable) {
-      // 如果value是一个对象, 我们要深入对象里面
-      if(typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        watch(value) // 递归
-      }
-      // 响应化
-      Object.defineProperty(target, key, {
-        configurable: true,
-        enumerable: !!enumerable,
-        get() {
-          console.log(`读取 ${key} 属性`)
-          return value
-        },
-        set(newVal) {
-          console.log(`设置 ${key} 属性为: ${newVal}`)
-          value = newVal
-        }
-      })
-      
-    }
-    // 这样我们在取值，赋值时就能做一些别的操作
-    function watch(obj) {
-      let keys = Object.keys(obj)
-      keys.forEach(key => {
-        let value = obj[key]
-        // 是否数组，如果是数组就要循环
-        if(Array.isArray(value)) {
-          for(let i = 0; i<value.length; i++ ) {
-            watch(value[i])
-          }
-        }
-        // 如果是基本数据类型或者对象，就响应化
-        defineReactive(obj, key, value, true)
-      })
-    }
 
-    watch(obj)
   </script>
 </body>
 </html>

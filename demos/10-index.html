@@ -7,6 +7,21 @@
 </head>
 <body>
   <script>
+    let ARRAY_METHOD = [
+      'push',
+      'pop'
+    ]
+    let newArray = Object.create(Array.prototype) // 创建一个对象，继承自数组原型
+    
+    ARRAY_METHOD.forEach(method => {
+      newArray[method] = function() {
+        console.log(`调用了${method}方法`)
+        for(let i = 0; i < arguments.length; i++) {
+          watch(arguments[i])
+        }
+        return Array.prototype[method].apply(this, arguments)
+      }
+    })
     var obj = {
       reactive: 'bilibili',
       deep: {
@@ -20,25 +35,6 @@
       }
     }
 
-    obj.name = 'yeye'
-
-    Object.defineProperty(obj, 'age', {
-      writable: true, // 默认是false
-      configurable: true,// 默认是false
-      enumerable: false,// 默认是false
-      value: 19
-    }) 
-    Object.defineProperty(obj, 'sex', {
-      configurable: true,// 默认是false
-      enumerable: true,// 默认是false
-      get() {
-        return '男'
-      },
-      set(sex) {
-        this.set = sex
-      }
-    })
-
     // vue如何收集data，并将它转成响应式的呢
     function defineReactive(target, key, value, enumerable) {
       // 如果value是一个对象, 我们要深入对象里面
@@ -50,11 +46,11 @@
         configurable: true,
         enumerable: !!enumerable,
         get() {
-          console.log('获取了！！！', value)
+          console.log(`读取 ${key} 属性`)
           return value
         },
         set(newVal) {
-          console.log('赋值了！！！', newVal)
+          console.log(`设置 ${key} 属性为: ${newVal}`)
           value = newVal
         }
       })
@@ -65,12 +61,13 @@
       Object.keys(obj).forEach(key => {
         // 是否数组，如果是数组就要循环
         if(Array.isArray(obj[key])) {
+          // 这里处理将push等方法变成响应式
+          obj[key].__proto__ = newArray
           obj[key].forEach(item => {
             watch(item)
           })
         } else {
           // 如果是基本数据类型或者对象，就响应化
-          // 所以数组没办法
           defineReactive(obj, key, obj[key], true)
         }
       })
