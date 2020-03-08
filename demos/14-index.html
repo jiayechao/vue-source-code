@@ -12,6 +12,120 @@
     <p>{{info}}</p>
   </div>
   <script>
+    let depId = 0
+    class Dep {
+
+      constructor() {
+        this.depId = depId++;
+        this.subs = []; // 存储的是与 当前 Dep 关联的 watcher
+      }
+
+      /** 添加一个 watcher */
+      addSub( sub ) {
+        const ids = this.subs.map(item => item.id)
+        // 如果没有相同的watcher才可以加入
+        if(!ids.includes(sub.watcherId)) {
+          this.subs.push(sub)
+        }
+      }
+      /** 移除 */
+      removeSub( sub ) {
+        for(let i = 0; i<this.subs.length; i++) {
+          if(sub === this.subs[i]) {
+            this.subs.splice(i, 1)
+          }
+        }
+      }
+
+      /** 将当前 Dep 与当前的 watcher ( 暂时渲染 watcher ) 关联*/
+      depend() {
+        // 适当的时机收集，当有全局的watcher时去时候
+        if(Dep.target) {
+          this.addSub(Dep.target) // 将当前watcher关联到当前dep
+          
+          Dep.target.addDep(this) // 将当前dep与当前watcher关联
+        }
+      }
+      /** 触发与之关联的 watcher 的 update 方法, 起到更新的作用 */
+      notify() {
+        // 在真实的 Vue 中是依次触发 this.subs 中的 watcher 的 update 方法
+          // 拿到当前dep的subs
+          let deps = this.subs.slice()
+          deps.forEach(watcher => {
+            watcher.update()
+          })
+      }
+
+      }
+
+
+
+      // 全局的容器存储渲染 Watcher
+      // let globalWatcher
+      // 学 Vue 的实现
+      Dep.target = null; // 这就是全局的 Watcher
+
+      // 把当前操作的watcher存入全局watcher中
+      let targetStack = []
+      function pushTarget(target) {
+        targetStack.unshift(Dep.target)
+        Dep.target = target
+      }
+      function popStack() {
+        Dep.target = targetStack.shift()
+      }
+    /* 
+    定义一个全局watch
+
+    @params {object} vm vue实例
+    @params {String|Function} 若果是渲染watcher，传入的就是渲染函数，如果是计算watcher，比如路径，就是字符串
+    **/
+    let watcherId = 0
+    class Watcher {
+      constructor(vm, expOrfn) {
+        this.watcherId = watcherId++
+        this.vm = vm;
+        this.getter = expOrfn;
+
+        this.deps = []; // 依赖项
+        this.depIds = {}; // 是一个 Set 类型, 用于保证 依赖项的唯一性 ( 简化的代码暂时不实现这一块 )
+
+        // 一开始需要渲染: 真实 vue 中: this.lazy ? undefined : this.get()
+        this.get();
+      }
+      // 计算，触发getter
+      get() {
+        // 放入全局watcher
+        pushTarget(this)
+        // 渲染
+        this.getter.call(this.vm, this.vm)
+        // 结束的时候，移除全局
+        popStack()
+      }
+      /**
+     * 执行, 并判断是懒加载, 还是同步执行, 还是异步执行: 
+     * 我们现在只考虑 异步执行 ( 简化的是 同步执行 )
+     */
+      run() {
+        this.get()
+        // 在真正的 vue 中是调用 queueWatcher, 来触发 nextTick 进行异步的执行
+      }
+      /** 对外公开的函数, 用于在 属性发生变化时触发的接口 */
+      update() {
+        this.run(); 
+      }
+      /** 清空依赖队列 */
+      cleanupDep() {
+
+      }
+      addDep(dep) {
+        const ids = this.deps.map(item => item.depId)
+        if(!ids.includes(dep.depId)) {
+          this.deps.push(dep)
+        }
+        
+      }
+    }
     let ARRAY_METHOD = [
       'push',
       'pop'
@@ -22,7 +136,7 @@
       newArray[method] = function() {
         console.log(`调用了${method}方法`)
         for(let i = 0; i < arguments.length; i++) {
-          watch(arguments[i])
+          observe(arguments[i])
         }
         return Array.prototype[method].apply(this, arguments)
       }
@@ -33,35 +147,41 @@
       var that = this
       // 如果value是一个对象, 我们要深入对象里面
       if(typeof value === 'object' && value !== null) {
-        watch(value, that)
+        observe(value, that)
       }
+      let dep = new Dep();
+      dep.__$propName__ = key
       // 响应化
       Object.defineProperty(target, key, {
         configurable: true,
         enumerable: !!enumerable,
         get() {
           console.log(`读取 ${key} 属性`)
+          // 依赖收集
+          dep.depend()
           return value
         },
         set(newVal) {
           console.log(`设置 ${key} 属性为: ${newVal}`)
-          watch(newVal)
+          // 这里是有问题的，如果newVal是一个基本属性就报错了，我们做一个简单额操作
+
+          typeof newVal === 'object' && observe(newVal)
           value = newVal
-          // 赋值时，重新调用render
-          that.mountComponent()
+          // 派发更新, 找到属性所在的deps的watcher, 调用 update
+          dep.notify();
         }
       })
       
     }
     // 这样我们在取值，赋值时就能做一些别的操作
-    function watch(obj, vm) {
+    function observe(obj, vm) {
       Object.keys(obj).forEach(key => {
         // 是否数组，如果是数组就要循环
         if(Array.isArray(obj[key])) {
           // 这里处理将push等方法变成响应式
           obj[key].__proto__ = newArray
           obj[key].forEach(item => {
-            watch(item, vm)
+            observe(item, vm)
           })
         }
         // else {
@@ -69,6 +189,7 @@
           // 将vm实例传入
           defineReactive.call(vm, obj, key, obj[key], true)
         // }
+        
       })
     }
     /* 生成虚拟dom */
@@ -166,7 +287,7 @@
     function GVue(options) {
       this._data = options.data
       // 将data响应化
-      watch(this._data, this)
+      this.initData()
       let elm = document.querySelector( options.el ); // vue 是字符串, 这里是 DOM 
       this._template = elm;
       this._el = options.el
@@ -185,7 +306,8 @@
       let mount = () => {
         this.update(this.render())
       }
-      mount() // 本质应该交给watcher去执行
+      // 我们已经在target函数中将他添加到全局中去了
+      new Watcher(this, mount)
     }
 
     // 这里生成render函数，我们需要缓存虚拟dom
@@ -208,16 +330,38 @@
       this._parentNode.replaceChild(getRDOM(vnodeData), document.querySelector( '#root' ))
       
     }
+    GVue.prototype.initData = function() {
+      const keys =  Object.keys(this._data)
+      // 将data的值变为响应式
+      observe(this._data, this)
+      keys.forEach(key => {
+        // 我们在这里可以将key映射到vue实例
+        proxy(this, '_data', key)
+      })
+      /*
+      这里我们只是将data挂载到实例，但是实际上props，method等都会有，所以我们这里可以传参
+      */
+    }
+    // 这个函数将访问代理过来,将key的值代理到targe的prop上
+    function proxy(target, prop, key) {
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable:true,
+        get() {
+          return target[prop][key]
+        },
+        set(newVal) {
+          target[prop][key] = newVal
+        }
+      })
+    }
 
     let data = {
+        info: '大帅哥',
         name: {
           firstname: 'jia',
           lastname: 'yeye' 
         },
-        info: '大帅哥',
-        arr: [
-        {foo: 1}
-        ]
       }
     let vm = new GVue({
       el: '#root',

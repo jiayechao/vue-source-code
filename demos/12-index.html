@@ -45,7 +45,9 @@
         },
         set(newVal) {
           console.log(`设置 ${key} 属性为: ${newVal}`)
-          watch(newVal)
+          // 这里是有问题的，如果newVal是一个基本属性就报错了，我们做一个简单额操作
+
+          typeof newVal === 'object' && watch(newVal)
           value = newVal
           // 赋值时，重新调用render
           that.mountComponent()
@@ -69,6 +71,7 @@
           // 将vm实例传入
           defineReactive.call(vm, obj, key, obj[key], true)
         // }
+        
       })
     }
     /* 生成虚拟dom */
@@ -166,7 +169,7 @@
     function GVue(options) {
       this._data = options.data
       // 将data响应化
-      watch(this._data, this)
+      this.initData()
       let elm = document.querySelector( options.el ); // vue 是字符串, 这里是 DOM 
       this._template = elm;
       this._el = options.el
@@ -207,6 +210,31 @@
       // 上面的被注释是有问题的，因为重新渲染时，this._template指向的是模板，所以要重新获取被替换的dom
       this._parentNode.replaceChild(getRDOM(vnodeData), document.querySelector( '#root' ))
       
+    }
+    GVue.prototype.initData = function() {
+      const keys =  Object.keys(this._data)
+      // 将data的值变为响应式
+      watch(this._data, this)
+      keys.forEach(key => {
+        // 我们在这里可以将key映射到vue实例
+        proxy(this, '_data', key)
+      })
+      /*
+      这里我们只是将data挂载到实例，但是实际上props，method等都会有，所以我们这里可以传参
+      */
+    }
+    // 这个函数将访问代理过来,将key的值代理到targe的prop上
+    function proxy(target, prop, key) {
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable:true,
+        get() {
+          return target[prop][key]
+        },
+        set(newVal) {
+          target[prop][key] = newVal
+        }
+      })
     }
 
     let data = {
