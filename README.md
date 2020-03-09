@@ -90,3 +90,20 @@ console.log(root)
 5. 依赖收集和派发更新
 
     data和watcher一一对应，当读取时收集依赖，将wather添加进全局watch，渲染完后取出。当set设置时，触发派发更新，将全局watcher一一触发。
+
+## vue源码解读
+
+### 目录解读
+  1. compiler 编译
+    - 使用字符串作为模板
+    - 存放字符串模板的解析算法，抽象语法树，优化等
+  2. core
+    - vue的构造函数
+    - 生命周期等方法
+  3. platform
+    - 针对运行环境有不同的实现
+    - vue的入口
+  4. server服务端
+    - 主要是vue服务端的部分
+  5. sfc， 单文件组件
+  6. share， 公共工具，方法
