@@ -9,6 +9,7 @@ const version = process.env.VERSION || require('../package.json').version
 const weexVersion = process.env.WEEX_VERSION || require('../packages/weex-vue-framework/package.json').version
 const featureFlags = require('./feature-flags')
 
+// 一些版本，license等信息
 const banner =
   '/*!\n' +
   ` * Vue.js v${version}\n` +
@@ -25,22 +26,25 @@ const weexFactoryPlugin = {
   }
 }
 
+// 快速入口，里面是真实路径
 const aliases = require('./alias')
 const resolve = p => {
   const base = p.split('/')[0]
   if (aliases[base]) {
+    // 转化真实路径
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
     return path.resolve(__dirname, '../', p)
   }
 }
 
+// 这是我们自己的配置
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
   'web-runtime-cjs-dev': {
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.common.dev.js'),
-    format: 'cjs',
+    format: 'cjs', // umd，cmd等打包方式的配置
     env: 'development',
     banner
   },
@@ -213,6 +217,7 @@ const builds = {
   }
 }
 
+// 将我们的配置转化成rollup需要的打包配置
 function genConfig (name) {
   const opts = builds[name]
   const config = {

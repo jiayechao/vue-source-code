@@ -8,9 +8,11 @@ if (!fs.existsSync('dist')) {
   fs.mkdirSync('dist')
 }
 
+// 这里获取所有的rollup配置入口
 let builds = require('./config').getAllBuilds()
 
 // filter builds via command line arg
+// 通过命令行参数筛选出不同的构建方式，这样就能构建出不同的vue
 if (process.argv[2]) {
   const filters = process.argv[2].split(',')
   builds = builds.filter(b => {
@@ -25,6 +27,7 @@ if (process.argv[2]) {
 
 build(builds)
 
+// 正式构建打包
 function build (builds) {
   let built = 0
   const total = builds.length

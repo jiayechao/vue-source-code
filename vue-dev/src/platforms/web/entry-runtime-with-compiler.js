@@ -14,6 +14,7 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
+// 缓存一下mount方法，为什么这么做，因为这个方法定义在run-time/index中，是可以直接使用的，这里是为了服用
 const mount = Vue.prototype.$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
@@ -22,6 +23,7 @@ Vue.prototype.$mount = function (
   el = el && query(el)
 
   /* istanbul ignore if */
+  // 首先vue不能挂载在html或者body上
   if (el === document.body || el === document.documentElement) {
     process.env.NODE_ENV !== 'production' && warn(
       `Do not mount Vue to <html> or <body> - mount to normal elements instead.`
@@ -31,6 +33,7 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 从这里来看，所有的vue实例（不管是单文件还是什么）最后都要转化成render方法
   if (!options.render) {
     let template = options.template
     if (template) {
@@ -79,6 +82,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // 最后执行mount方法
   return mount.call(this, el, hydrating)
 }
 
