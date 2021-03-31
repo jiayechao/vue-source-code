@@ -16,10 +16,14 @@ const idToTemplate = cached(id => {
 
 // 缓存一下mount方法，为什么这么做，因为这个方法定义在run-time/index中，是可以直接使用的，这里是为了服用
 const mount = Vue.prototype.$mount
+/**
+ * mount函数接收两个参数，一个el挂在元素，一个跟服务端渲染相关
+ */
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 
   el = el && query(el)
 
   /* istanbul ignore if */

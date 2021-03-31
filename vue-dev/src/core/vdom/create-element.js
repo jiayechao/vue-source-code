@@ -45,11 +45,11 @@ export function createElement (
 }
 
 export function _createElement (
-  context: Component,
-  tag?: string | Class<Component> | Function | Object,
-  data?: VNodeData,
-  children?: any,
-  normalizationType?: number
+  context: Component, // 上下文
+  tag?: string | Class<Component> | Function | Object, // 标签
+  data?: VNodeData, // vnode数据
+  children?: any, // 子节点
+  normalizationType?: number // 子节点规范类型，根据类型将传入的子节点规范
 ): VNode | Array<VNode> {
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -87,15 +87,19 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  // 根据传入的子节点规范类型对子节点做不同的规范，具体的传入可以看render中的vm._c和vm._render,
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     children = simpleNormalizeChildren(children)
   }
+  // 规范化children之后，再去生成一个VNode
   let vnode, ns
+  // 对tag做判断，如果是字符串
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // 再次判断tag是否内置，
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
@@ -109,6 +113,7 @@ export function _createElement (
         undefined, undefined, context
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
+      // 是否已注册组件，即Vue.component
       // component
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {

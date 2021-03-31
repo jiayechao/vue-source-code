@@ -31,6 +31,7 @@ extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
+// 针对服务端渲染做一个处理，因为服务端没有dom操作，会返回一个空操作
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
@@ -40,6 +41,7 @@ Vue.prototype.$mount = function (
   hydrating?: boolean
 ): Component {
   el = el && inBrowser ? query(el) : undefined
+  // 而mount函数实际上跑的这个函数
   return mountComponent(this, el, hydrating)
 }
 

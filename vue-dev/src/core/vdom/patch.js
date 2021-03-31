@@ -122,6 +122,8 @@ export function createPatchFunction (backend) {
 
   let creatingElmInVPre = 0
 
+  
+  // 这个方法很重要，他的主要作用就是通过vnode生成dom，并插入他的父元素
   function createElm (
     vnode,
     insertedVnodeQueue,
@@ -141,6 +143,7 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // 这里尝试创建子组件，new Vue时这里是false
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -148,6 +151,7 @@ export function createPatchFunction (backend) {
     const data = vnode.data
     const children = vnode.children
     const tag = vnode.tag
+    // 判断vnode中是否存在tag
     if (isDef(tag)) {
       if (process.env.NODE_ENV !== 'production') {
         if (data && data.pre) {
@@ -163,6 +167,7 @@ export function createPatchFunction (backend) {
         }
       }
 
+      // 创建一个占位符元素
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
         : nodeOps.createElement(tag, vnode)
@@ -188,6 +193,7 @@ export function createPatchFunction (backend) {
           insert(parentElm, vnode.elm, refElm)
         }
       } else {
+        // 创建子元素
         createChildren(vnode, children, insertedVnodeQueue)
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue)
@@ -203,6 +209,7 @@ export function createPatchFunction (backend) {
       insert(parentElm, vnode.elm, refElm)
     } else {
       vnode.elm = nodeOps.createTextNode(vnode.text)
+      // 将vnode生成的dom插入他的父元素节点
       insert(parentElm, vnode.elm, refElm)
     }
   }
@@ -716,6 +723,7 @@ export function createPatchFunction (backend) {
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
+        // new Vue的时候，我们oldVnode是一个div，那么走的是这里
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
@@ -740,6 +748,7 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // 我们传入的div被赋值成一个空节点
           oldVnode = emptyNodeAt(oldVnode)
         }
 
