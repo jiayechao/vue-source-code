@@ -198,6 +198,7 @@ export function createPatchFunction (backend) {
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
+        // 将生成的DOM插入父元素节点。这里思考，因为是递归调用，所以首先是子组件的首先渲染，create方法也是子组件的首先执行。
         insert(parentElm, vnode.elm, refElm)
       }
 
@@ -208,8 +209,9 @@ export function createPatchFunction (backend) {
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     } else {
+      // 没有tag，可能是一个文本或者注释
       vnode.elm = nodeOps.createTextNode(vnode.text)
-      // 将vnode生成的dom插入他的父元素节点
+      // 将vnode生成的dom插入他的父元素节点。实际上整个过程就是递归创建了一个完整的 DOM 树并插入到 Body 上。不是和直接操作DOM一样吗？
       insert(parentElm, vnode.elm, refElm)
     }
   }
@@ -277,6 +279,7 @@ export function createPatchFunction (backend) {
   }
 
   function insert (parent, elm, ref) {
+    // 这里调用封装的方法直接操作DOM
     if (isDef(parent)) {
       if (isDef(ref)) {
         if (nodeOps.parentNode(ref) === parent) {
@@ -289,11 +292,13 @@ export function createPatchFunction (backend) {
   }
 
   function createChildren (vnode, children, insertedVnodeQueue) {
+    // 这个逻辑很简单，遍历子节点，递归调用createElm。很明显，这里是深度遍历
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
         checkDuplicateKeys(children)
       }
       for (let i = 0; i < children.length; ++i) {
+        // 注意这里的vnode.elm是作为父元素传入的
         createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
       }
     } else if (isPrimitive(vnode.text)) {
@@ -309,6 +314,7 @@ export function createPatchFunction (backend) {
   }
 
   function invokeCreateHooks (vnode, insertedVnodeQueue) {
+    // 执行所有的create，并将Vnode推操作入队列
     for (let i = 0; i < cbs.create.length; ++i) {
       cbs.create[i](emptyNode, vnode)
     }
@@ -805,7 +811,7 @@ export function createPatchFunction (backend) {
         }
       }
     }
-
+    // 最终将生成vnode树做一个整体插入
     invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
     return vnode.elm
   }
