@@ -26,10 +26,10 @@ const weexFactoryPlugin = {
   }
 }
 
-// 快速入口，里面是真实路径
+// 快速入口，里面是真实路径, （可以这样，又学到了）
 const aliases = require('./alias')
 const resolve = p => {
-  const base = p.split('/')[0]
+  const base = p.split('/')[0] // base并不是真是路径，而是别名
   if (aliases[base]) {
     // 转化真实路径
     return path.resolve(aliases[base], p.slice(base.length + 1))
@@ -38,7 +38,7 @@ const resolve = p => {
   }
 }
 
-// 这是我们自己的配置
+// 这是我们自己的配置（这里将基本配置提取出来，再通过函数生成需要的配置，值得学习）
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
   'web-runtime-cjs-dev': {
@@ -64,7 +64,7 @@ const builds = {
     alias: { he: './entity-decoder' },
     banner
   },
-  'web-full-cjs-prod': {
+  'web-full-cjs-prod': { // 我们这次的学习分析还是学习完整版的
     entry: resolve('web/entry-runtime-with-compiler.js'),
     dest: resolve('dist/vue.common.prod.js'),
     format: 'cjs',

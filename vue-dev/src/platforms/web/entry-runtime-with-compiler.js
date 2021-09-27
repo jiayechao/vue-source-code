@@ -104,6 +104,10 @@ function getOuterHTML (el: Element): string {
   }
 }
 
-Vue.compile = compileToFunctions
+Vue.compile = compileToFunctions // 这里有一个compile函数，将模板字符串编译成render函数
 
 export default Vue
+
+/**
+ * 这里输出一个Vue，也就是我们通常的 import Vue from vue
+ */
