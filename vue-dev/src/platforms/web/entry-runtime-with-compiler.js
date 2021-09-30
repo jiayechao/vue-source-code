@@ -14,7 +14,7 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
-// 缓存一下mount方法，为什么这么做，因为这个方法定义在run-time/index中，是可以直接使用的，这里是为了服用
+// 缓存一下mount方法，为什么这么做，因为这个方法定义在run-time/index中，是可以直接使用的，这里是为了复用
 const mount = Vue.prototype.$mount
 /**
  * mount函数接收两个参数，一个el挂在元素，一个跟服务端渲染相关
@@ -37,7 +37,7 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
-  // 从这里来看，所有的vue实例（不管是单文件还是什么）最后都要转化成render方法
+  // 从这里来看，所有的vue实例（不管是单文件还是什么）最后都要转化成render方法，这是vue内部的编译
   if (!options.render) {
     let template = options.template
     if (template) {
@@ -68,7 +68,7 @@ Vue.prototype.$mount = function (
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
-
+      // 可以看到通过这个函数将模板编译成render函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -76,7 +76,7 @@ Vue.prototype.$mount = function (
         delimiters: options.delimiters,
         comments: options.comments
       }, this)
-      options.render = render
+      options.render = render // 这里保证this.$options.render始终存在，mountComponent函数中才能执行到位
       options.staticRenderFns = staticRenderFns
 
       /* istanbul ignore if */

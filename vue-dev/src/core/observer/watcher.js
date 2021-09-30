@@ -98,6 +98,7 @@ export default class Watcher {
   /**
    * Evaluate the getter, and re-collect dependencies.
    */
+  // 这里会执行传入的回调updateComponent
   get () {
     pushTarget(this)
     let value

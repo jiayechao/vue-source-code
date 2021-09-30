@@ -51,9 +51,13 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 初始化生命周期
     initLifecycle(vm)
+    // 初始化事件中心
     initEvents(vm)
+    // 初始化渲染函数
     initRender(vm)
+    // 初始化各种data，state，可以看到将不同的功能逻辑拆分成不同的函数来维护，清晰明了
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
     initState(vm)
@@ -68,7 +72,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
-      // 这里执行mount方法
+      // 这里执行mount方法。如果有el就挂载，挂载的目的就是将模板和数据渲染成dom，分析这个mount方法
       vm.$mount(vm.$options.el)
     }
   }

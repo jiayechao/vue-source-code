@@ -139,6 +139,14 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * $mount操作实际上调用的是这个函数
+ * 接受一个组件
+ * 
+ * 
+ * 
+ * 
+ *  */
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -146,7 +154,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
-    vm.$options.render = createEmptyVNode
+    vm.$options.render = createEmptyVNode // 创建一个空节点
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
@@ -184,7 +192,7 @@ export function mountComponent (
       measure(`vue ${name} render`, startTag, endTag)
 
       mark(startTag)
-      // 通过update函数更新dom，重点函数
+      // 最终通过update函数更新dom，重点函数。可以看到数据经过mountd后生成虚拟DOM，然后更新DOM
       vm._update(vnode, hydrating)
       mark(endTag)
       measure(`vue ${name} patch`, startTag, endTag)
@@ -198,6 +206,10 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  /**
+   * 我们在观察者的构造函数中将其设置为 vm._watcher 
+   * 由于观察者的初始补丁可能会调用 $forceUpdate（例如，在 child组件的挂载钩子），它依赖于已经定义的 vm._watcher
+   */
   // 这里创建watcher实例，并在回调函数中执行updateComponent
   new Watcher(vm, updateComponent, noop, {
     before () {
@@ -211,9 +223,9 @@ export function mountComponent (
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
   // vm.$vnode == null表明是根节点，此时挂载完毕，执行mounted
-  if (vm.$vnode == null) {
-    vm._isMounted = true
-    callHook(vm, 'mounted')
+  if (vm.$vnode == null) { // 用根实例的虚拟父节点为null判断
+    vm._isMounted = true // 挂载结束
+    callHook(vm, 'mounted') // 执行mounted声明周期
   }
   return vm
 }
