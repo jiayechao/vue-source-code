@@ -29,7 +29,7 @@ export function simpleNormalizeChildren (children: any) {
 // e.g. <template>, <slot>, v-for, or when the children is provided by user
 // with hand-written render functions / JSX. In such cases a full normalization
 // is needed to cater to all possible types of children values.
-// 针对数组形式需要多次执行
+// 当children只有原始基本类型时，直接创建一个文本节点。然后判断是否数组，此时会调用normalizeArrayChildren
 export function normalizeChildren (children: any): ?Array<VNode> {
   return isPrimitive(children)
     ? [createTextVNode(children)]
@@ -42,6 +42,8 @@ function isTextNode (node): boolean {
   return isDef(node) && isDef(node.text) && isFalse(node.isComment)
 }
 
+
+// 这个函数将children变成了一个Array<VNode>类型
 function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
   const res = []
   let i, c, lastIndex, last
@@ -50,11 +52,12 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
     if (isUndef(c) || typeof c === 'boolean') continue
     lastIndex = res.length - 1
     last = res[lastIndex]
-    //  nested
+    //  主要逻辑就是遍历children，获得单个组件c，并对c做出判断执行不同的处理
     if (Array.isArray(c)) {
       if (c.length > 0) {
+        // 如果是数组类型，递归调用
         c = normalizeArrayChildren(c, `${nestedIndex || ''}_${i}`)
-        // merge adjacent text nodes
+        // merge adjacent text nodes 合并临近的两个文本节点
         if (isTextNode(c[0]) && isTextNode(last)) {
           res[lastIndex] = createTextVNode(last.text + (c[0]: any).text)
           c.shift()
@@ -62,6 +65,7 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
         res.push.apply(res, c)
       }
     } else if (isPrimitive(c)) {
+      // 如果是基础类型，那么使用createTextVNode转为VNode类型
       if (isTextNode(last)) {
         // merge adjacent text nodes
         // this is necessary for SSR hydration because text nodes are

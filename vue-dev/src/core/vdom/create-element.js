@@ -25,6 +25,8 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+
+// 创建虚拟DOM就是从这个函数开始的，可以看到他的入参和出参
 export function createElement (
   context: Component,
   tag: any,
@@ -41,6 +43,7 @@ export function createElement (
   if (isTrue(alwaysNormalize)) {
     normalizationType = ALWAYS_NORMALIZE
   }
+  // createElement是对_createElement的封装
   return _createElement(context, tag, data, children, normalizationType)
 }
 
@@ -49,8 +52,9 @@ export function _createElement (
   tag?: string | Class<Component> | Function | Object, // 标签
   data?: VNodeData, // vnode数据
   children?: any, // 子节点
-  normalizationType?: number // 子节点规范类型，根据类型将传入的子节点规范
+  normalizationType?: number // 子节点规范类型，根据类型将传入的子节点规范。主要参考render函数是编译生成的还是用户手写的
 ): VNode | Array<VNode> {
+  // 这个流程有点多，我们主要分析两个重点流程：children的规范化和VNode的创建
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
@@ -88,12 +92,13 @@ export function _createElement (
     children.length = 0
   }
   // 根据传入的子节点规范类型对子节点做不同的规范，具体的传入可以看render中的vm._c和vm._render,
+  // 为什么要做规范化，因为传入的children是任意类型，而我们需要的是VNode
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     children = simpleNormalizeChildren(children)
   }
-  // 规范化children之后，再去生成一个VNode
+  // 规范化children之后，再去生成一个VNode实例
   let vnode, ns
   // 对tag做判断，如果是字符串
   if (typeof tag === 'string') {
@@ -126,7 +131,7 @@ export function _createElement (
       )
     }
   } else {
-    // direct component options / constructor
+    // direct component options / constructor 如果是一个已注册的组件名，那么调用createComponent创建组件类型的VNode
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {

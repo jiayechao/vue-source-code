@@ -67,6 +67,13 @@ function createKeyToOldIdx (children, beginIdx, endIdx) {
   return map
 }
 
+// 这么大一个函数,最终返回一个patch，就是用来服务__patch__
+/**
+ *  createPatchFunction通过柯里化技巧，将传入的不同平台的
+ * 节点操作函数等固化，并提供了大同小异的主要逻辑
+ * 
+ * modules, nodeOps会在之后的不同过程阶段执行相应的钩子函数
+ */
 export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
@@ -153,6 +160,7 @@ export function createPatchFunction (backend) {
     const tag = vnode.tag
     // 判断vnode中是否存在tag
     if (isDef(tag)) {
+      // 判断tag合法性
       if (process.env.NODE_ENV !== 'production') {
         if (data && data.pre) {
           creatingElmInVPre++
@@ -196,6 +204,7 @@ export function createPatchFunction (backend) {
         // 创建子元素
         createChildren(vnode, children, insertedVnodeQueue)
         if (isDef(data)) {
+          // 执行所有的create钩子
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
         // 将生成的DOM插入父元素节点。这里思考，因为是递归调用，所以首先是子组件的首先渲染，create方法也是子组件的首先执行。
@@ -206,6 +215,7 @@ export function createPatchFunction (backend) {
         creatingElmInVPre--
       }
     } else if (isTrue(vnode.isComment)) {
+      // 尝试创建子组件
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     } else {
@@ -710,6 +720,17 @@ export function createPatchFunction (backend) {
     }
   }
 
+  /**
+   * 可以看到patch接受4个参数，
+   * oldVnode 表示旧的vnode节点，可以不存在或者传入一个dom对象
+   * vnode 表示执行render之后的vnode节点
+   * hydrating 是否服务端渲染
+   * removeOnly 是给transition-group使用的
+   * 
+   * 学习大函数的分析逻辑：就是去掉分支逻辑，只看执行逻辑。
+   * 比如我们首次调用时：` vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* )
+   * 
+   */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
@@ -754,7 +775,7 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
-          // 我们传入的div被赋值成一个空节点
+          // 我们传入的div被转换成一个vnode
           oldVnode = emptyNodeAt(oldVnode)
         }
 
@@ -762,6 +783,10 @@ export function createPatchFunction (backend) {
         const oldElm = oldVnode.elm
         const parentElm = nodeOps.parentNode(oldElm)
 
+        /**
+         * 这个方法非常重要，他的主要作用就是通过虚拟节点创建真实的dom并插入到他的父节点中，最上面的就是一个body
+         * 整个过程就是递归创建一个完整的DOM树插入到body上
+         */
         // create new node
         createElm(
           vnode,
@@ -769,7 +794,7 @@ export function createPatchFunction (backend) {
           // extremely rare edge case: do not insert if old element is in a
           // leaving transition. Only happens when combining transition +
           // keep-alive + HOCs. (#4590)
-          oldElm._leaveCb ? null : parentElm,
+          oldElm._leaveCb ? null : parentElm, // 我们传入的实际是oldVnode.elm的父元素
           nodeOps.nextSibling(oldElm)
         )
 
@@ -811,7 +836,7 @@ export function createPatchFunction (backend) {
         }
       }
     }
-    // 最终将生成vnode树做一个整体插入
+    // 最终根据插入顺序队列执行相关的insert钩子函数
     invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
     return vnode.elm
   }

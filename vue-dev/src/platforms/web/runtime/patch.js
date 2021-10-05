@@ -9,5 +9,5 @@ import platformModules from 'web/runtime/modules/index'
 // built-in modules have been applied.
 const modules = platformModules.concat(baseModules)
 
-// 这里传入一个对象，该对象包含两个参数，nodeOps是一系列操作节点的函数，moduls是一些模块钩子函数的定义
+// 这里传入一个对象，该对象包含两个参数，nodeOps是一系列操作dom的函数，moduls是一些模块钩子函数的定义
 export const patch: Function = createPatchFunction({ nodeOps, modules })

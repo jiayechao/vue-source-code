@@ -57,6 +57,7 @@ export function initLifecycle (vm: Component) {
 
 export function lifecycleMixin (Vue: Class<Component>) {
   // update方法定义在这里。update的调用有两个时机，首次渲染和数据变化时的视图更新
+  // update的作用就是将vnode渲染成真实的dom
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -65,8 +66,14 @@ export function lifecycleMixin (Vue: Class<Component>) {
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
+
+    // update的核心就是调用__patch__方法，他是根据不同平台入口来定义的
     if (!prevVnode) {
       // initial render，传入4个参数
+      /**
+       * vm.$el很明显是在mountComponent的时候赋值的
+       * vnode时render函数的返回值
+       */
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates

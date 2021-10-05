@@ -1,5 +1,6 @@
 /* @flow */
 
+// 这里定义了虚拟DOM的所有属性。VNode 是对真实 DOM 的一种抽象描述
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
