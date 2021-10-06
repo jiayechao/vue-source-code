@@ -38,7 +38,7 @@ export function initExtend (Vue: GlobalAPI) {
     Sub.prototype = Object.create(Super.prototype) // 继承当前实例，也就是vue实例的原型，也就是Vue
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
-    // 当然子实例还有一些自己的拓展选项
+    // 当然子实例还有一些自己的拓展选项，这个就是合并配置，也就是Vue.extends的原理
     Sub.options = mergeOptions(
       Super.options,
       extendOptions

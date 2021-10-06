@@ -80,10 +80,10 @@ export function initMixin (Vue: Class<Component>) {
 }
 
 export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
-  const opts = vm.$options = Object.create(vm.constructor.options)
+  const opts = vm.$options = Object.create(vm.constructor.options) // 这里实际上就是拷贝一份子组件的options
   // doing this because it's faster than dynamic enumeration.
   const parentVnode = options._parentVnode
-  // 就是将子组件的的一些参数合并到内部选项
+  // 就是将子组件的父vnode和父实例合并到内部选项
   opts.parent = options.parent
   opts._parentVnode = parentVnode
 

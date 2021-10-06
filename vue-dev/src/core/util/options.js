@@ -147,6 +147,10 @@ function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
 ): ?Array<Function> {
+  // 如果不存在childVal，就返回parentVal，否则就判断parentVal
+  // 如果存在就把childVal添加到parentVal
+  // 否则就判断childVal是否数组
+  // 最终结果就是相同钩子会合并成一个数组
   const res = childVal
     ? parentVal
       ? parentVal.concat(childVal)
@@ -170,7 +174,7 @@ function dedupeHooks (hooks) {
 }
 
 LIFECYCLE_HOOKS.forEach(hook => {
-  strats[hook] = mergeHook
+  strats[hook] = mergeHook // 可以看到所有的生命周期钩子函数的合并策略都是mergeHook
 })
 
 /**
@@ -385,6 +389,7 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
+// 从入参和出参看，这个函数就是将parent和child合并
 export function mergeOptions (
   parent: Object,
   child: Object,
@@ -406,6 +411,8 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+
+  // 先递归将extends和mixins合并到parent上
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
@@ -419,14 +426,17 @@ export function mergeOptions (
 
   const options = {}
   let key
+  // 遍历parent，调用mergeField
   for (key in parent) {
     mergeField(key)
   }
+  // 遍历parent上没有的属性，调用mergeField
   for (key in child) {
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
+  // 最终还是将所有的配置放到了options
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)

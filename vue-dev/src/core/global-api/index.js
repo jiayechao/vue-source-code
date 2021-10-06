@@ -53,6 +53,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     return obj
   }
 
+  // Vue.options起初就是一个空对象
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
@@ -62,6 +63,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
 
+  // 将内置组件拓展到components上，内置组件现在有 <\keep-alive,transition, transition-group>\，这就是为什么这几个组件不用注册的原因
+  // ps: 是不是我们的自定义组件也是这样注册的？
   extend(Vue.options.components, builtInComponents)
 
   initUse(Vue)
