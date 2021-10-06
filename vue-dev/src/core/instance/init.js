@@ -13,7 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
-  // 这里定义了init方法
+  // 这里定义了init方法，构建出来的组件子类也会走到这一步 
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
@@ -30,13 +30,13 @@ export function initMixin (Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
-    if (options && options._isComponent) {
+    if (options && options._isComponent) { // 因为子组件继承了Vue，所以_init也是走到了这里
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
-      // merge options 合并配置
+      // merge options 合并配置。vue构造函数的options和用户传入的options做了合并，所以我们后面访问实例$options就行
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -73,6 +73,7 @@ export function initMixin (Vue: Class<Component>) {
 
     if (vm.$options.el) {
       // 这里执行mount方法。如果有el就挂载，挂载的目的就是将模板和数据渲染成dom，分析这个mount方法
+      // 如果是组件，也就是子实例，是没有这个el的，此时组件自己接管了$mount
       vm.$mount(vm.$options.el)
     }
   }
@@ -82,6 +83,7 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   const opts = vm.$options = Object.create(vm.constructor.options)
   // doing this because it's faster than dynamic enumeration.
   const parentVnode = options._parentVnode
+  // 就是将子组件的的一些参数合并到内部选项
   opts.parent = options.parent
   opts._parentVnode = parentVnode
 

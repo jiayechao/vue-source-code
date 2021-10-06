@@ -44,10 +44,12 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 创建一个vue实例
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
       )
+      // 组件自己接管了mount，如果只是考虑客户端，此时执行的就是 child.$mount(undefined),又一次走到了mountedComponent -> _render —> _update
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
@@ -97,7 +99,12 @@ const componentVNodeHooks = {
 }
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
-
+/**
+ * 用来创建组件的虚拟DOM，又是一个超级大的函数，我们还是遵循之分徐核心流程
+ * 1. 构造子类构造函数
+ * 2. 安装组件钩子函数
+ * 3. 实例化vnode
+ */
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -109,11 +116,19 @@ export function createComponent (
     return
   }
 
-  const baseCtor = context.$options._base
+  const baseCtor = context.$options._base // 实际上就是Vue，可以查看文件 core\global-api\index.js 中有这么一段Vue.options._base = Vue
 
   // plain options object: turn it into a constructor
   if (isObject(Ctor)) {
-    Ctor = baseCtor.extend(Ctor)
+    /**
+     * 按照我们的组件写法，Ctor实际上也是一个对象{
+     *  name: '',
+     *  data: {},
+     *  props: []
+     *  ...
+     * }
+     *  */
+    Ctor = baseCtor.extend(Ctor) // baseCtor既然是Vue，我们看一下Vue.extend函数的定义
   }
 
   // if at this stage it's not a constructor or an async component factory,
@@ -187,6 +202,7 @@ export function createComponent (
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 最后一个重要环节就是生成一个vnode，值得注意的是，这里的vnode传参是没有children的
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
@@ -209,9 +225,10 @@ export function createComponentInstanceForVnode (
   vnode: any, // we know it's MountedComponentVNode but flow doesn't
   parent: any, // activeInstance in lifecycle state
 ): Component {
+  // 内部组件参数
   const options: InternalComponentOptions = {
-    _isComponent: true,
-    _parentVnode: vnode,
+    _isComponent: true, // 表示它是一个组件
+    _parentVnode: vnode, // 表示当前激活的组件实例，那么这个如何拿到呢？看lifecycle.js
     parent
   }
   // check inline-template render functions
@@ -220,6 +237,7 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // new vnode.componentOptions.Ctor实际上就是构建的Vue子类Sub，也就是子组件的实例化
   return new vnode.componentOptions.Ctor(options)
 }
 
@@ -230,6 +248,7 @@ function installComponentHooks (data: VNodeData) {
     const existing = hooks[key]
     const toMerge = componentVNodeHooks[key]
     if (existing !== toMerge && !(existing && existing._merged)) {
+      // 可以看到，就是将componentVNodeHooks上的钩子函数合并到data.hooks上去（在patch时会依次执行）。merge策略也很简单，vueapi已经说过了
       hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge
     }
   }

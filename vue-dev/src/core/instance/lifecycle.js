@@ -18,10 +18,13 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
-export let activeInstance: any = null
+export let activeInstance: any = null // 保持当前上下文的VUE实例。js是一个单线程，vue的整个初始化就是一个深度遍历的过程，
+// 在创建子组件等过程需要知道当前上下文，并把它作为子组件的父vue实例
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
+  // 保存上一次的活动实例，并将当前实例激活。实际上pre和当前vm是一个父子关系
+  // 当一个vm实例化完成所有子树的patch后，activeInstance回到了父实例，保证了整个深度遍历过程中，实例化子组件时能传入当前的父实例，并且通过$parent保留这种关系
   const prevActiveInstance = activeInstance
   activeInstance = vm
   return () => {
@@ -38,10 +41,10 @@ export function initLifecycle (vm: Component) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
-    parent.$children.push(vm)
+    parent.$children.push(vm) // 将当前实例保存在父实例的chilren中
   }
 
-  vm.$parent = parent
+  vm.$parent = parent // 保留当前vm的父实例
   vm.$root = parent ? parent.$root : vm
 
   vm.$children = []
@@ -62,8 +65,8 @@ export function lifecycleMixin (Vue: Class<Component>) {
     const vm: Component = this
     const prevEl = vm.$el
     const prevVnode = vm._vnode
-    const restoreActiveInstance = setActiveInstance(vm)
-    vm._vnode = vnode
+    const restoreActiveInstance = setActiveInstance(vm) // 当当前实例赋值给activeInstance
+    vm._vnode = vnode // vnode是通过_render后生成的vnode,$vnode是vnode的父节点 vm._vnode.parent === vm.$vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
 

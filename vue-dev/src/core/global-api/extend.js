@@ -15,6 +15,7 @@ export function initExtend (Vue: GlobalAPI) {
 
   /**
    * Class inheritance
+   * 返回了一个构造函数，这个构造函数继承自Vue
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
@@ -29,13 +30,15 @@ export function initExtend (Vue: GlobalAPI) {
     if (process.env.NODE_ENV !== 'production' && name) {
       validateComponentName(name)
     }
-
+    
+    // 当我们实例化Sub时，还是会走在Vue实例的初始化逻辑
     const Sub = function VueComponent (options) {
       this._init(options)
     }
-    Sub.prototype = Object.create(Super.prototype)
+    Sub.prototype = Object.create(Super.prototype) // 继承当前实例，也就是vue实例的原型，也就是Vue
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
+    // 当然子实例还有一些自己的拓展选项
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
@@ -74,7 +77,7 @@ export function initExtend (Vue: GlobalAPI) {
     Sub.extendOptions = extendOptions
     Sub.sealedOptions = extend({}, Sub.options)
 
-    // cache constructor
+    // cache constructor 做了缓存
     cachedCtors[SuperId] = Sub
     return Sub
   }
