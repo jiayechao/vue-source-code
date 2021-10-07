@@ -375,6 +375,7 @@ export function createPatchFunction (backend) {
       if (isDef(i = data.hook) && isDef(i = i.destroy)) i(vnode)
       for (i = 0; i < cbs.destroy.length; ++i) cbs.destroy[i](vnode)
     }
+    // 递归销毁，所以destroyed的顺序和mounted一样，也是先子后父
     if (isDef(i = vnode.children)) {
       for (j = 0; j < vnode.children.length; ++j) {
         invokeDestroyHook(vnode.children[j])
@@ -733,6 +734,7 @@ export function createPatchFunction (backend) {
    * 
    */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 这里判断是销毁的操作，可以在lifeCycle中看到，vnode传入的是null
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
@@ -838,7 +840,7 @@ export function createPatchFunction (backend) {
         }
       }
     }
-    // 最终根据插入顺序队列执行相关的insert钩子函数
+    // 最终根据插入顺序队列执行相关的insert钩子函数,insert钩子中就有组件的mounted生命周期
     invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
     return vnode.elm
   }

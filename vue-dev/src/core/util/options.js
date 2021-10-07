@@ -461,6 +461,8 @@ export function resolveAsset (
   }
   const assets = options[type]
   // check local registration variations first
+  // 可以看到，这里我们先直接用id去拿，拿不到就转成驼峰，还是拿不到再将首字母大写，仍然拿不到就报错
+  // 这也说明了我们在使用Vue.component的时候，id的格式可以在这三种形式选择
   if (hasOwn(assets, id)) return assets[id]
   const camelizedId = camelize(id)
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
@@ -474,5 +476,5 @@ export function resolveAsset (
       options
     )
   }
-  return res
+  return res // 这样我们就拿到了这个组件的构造函数
 }

@@ -119,7 +119,7 @@ export function _createElement (
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // 是否已注册组件，即Vue.component
-      // component
+      // Ctor就是组件的构造函数了
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements

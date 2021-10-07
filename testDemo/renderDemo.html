@@ -17,8 +17,14 @@
         }
       }
     })
+    var componentA = {
+      template: '<h2>h2h2h2h2</h2>'
+    }
     var vm = new Vue({
       el: '#app',
+      components: {
+        'componentA': componentA
+      },
       render: (createElement) => {
         return createElement(
           'div',
@@ -29,7 +35,8 @@
           },
           [
             '我是一个鱼',
-            createElement('p-line')
+            createElement('p-line'),
+            createElement('componentA')
           ]
         )
       }

@@ -1,5 +1,6 @@
 export const SSR_ATTR = 'data-server-rendered'
 
+// 这里初始化三个全局函数
 export const ASSET_TYPES = [
   'component',
   'directive',

@@ -37,6 +37,7 @@ export function initMixin (Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       // merge options 合并配置。vue构造函数的options和用户传入的options做了合并，所以我们后面访问实例$options就行
+      // 
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -62,6 +63,7 @@ export function initMixin (Vue: Class<Component>) {
     initInjections(vm) // resolve injections before data/props
     initState(vm)
     initProvide(vm) // resolve provide after data/props
+    // 可以看到created实在initstate之后，而beforeCreate是在之前。而initstate是初始化data，props，computed，methods，watch的
     callHook(vm, 'created')
 
     /* istanbul ignore if */
@@ -80,6 +82,8 @@ export function initMixin (Vue: Class<Component>) {
 }
 
 export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
+  
+  // 这里的合并策略也说明了全局组件和局部组件的不同。全局组件是将option
   const opts = vm.$options = Object.create(vm.constructor.options) // 这里实际上就是拷贝一份子组件的options
   // doing this because it's faster than dynamic enumeration.
   const parentVnode = options._parentVnode
