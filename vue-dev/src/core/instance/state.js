@@ -45,6 +45,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 可以看到这里初始化了props，methods，computed，watch
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -72,6 +73,7 @@ function initProps (vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+  // 可以看到遍历props配置。并主要做了两个工作
   for (const key in propsOptions) {
     keys.push(key)
     const value = validateProp(key, propsOptions, propsData, vm)
@@ -85,6 +87,7 @@ function initProps (vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // 一个是通过这个函数变成响应式，可以通过vm._props.xxx访问到props
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -102,6 +105,7 @@ function initProps (vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 另一个就是通过proxy将vm._props.xxx 的访问代理到 vm.xxx
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
@@ -109,6 +113,7 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+// initData做了两件事
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
@@ -127,6 +132,8 @@ function initData (vm: Component) {
   const props = vm.$options.props
   const methods = vm.$options.methods
   let i = keys.length
+  // 一个就是对data返回的对象做遍历，通过proxy将vm._data.xxx代理到vm.xxx
+  // 另一个就是讲data属性变成响应式，通过vm._data.xxx可以访问vm.xxx
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
