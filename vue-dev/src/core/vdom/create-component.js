@@ -140,11 +140,12 @@ export function createComponent (
     return
   }
 
-  // async component
+  // async component 异步组件不会执行extend，没有cid
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    // 异步组件是异步的，所以第一次这里是undefined，创建一个注释节点占位符
     if (Ctor === undefined) {
       // return a placeholder node for async component, which is rendered
       // as a comment node but preserves all the raw information for the node.

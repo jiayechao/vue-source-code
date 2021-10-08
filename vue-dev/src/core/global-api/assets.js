@@ -20,7 +20,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
         if (process.env.NODE_ENV !== 'production' && type === 'component') {
           validateComponentName(id)
         }
-        // 组件注册
+        // 普通组件注册，异步组件不会走这里
         if (type === 'component' && isPlainObject(definition)) {
           definition.name = definition.name || id
           // this.options._base这个其实就是Vue啦，可以看到我们每个组件都是extend继承来的
@@ -29,6 +29,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
+        // 异步组件的处理直接走这里
         this.options[type + 's'][id] = definition
         return definition
       }

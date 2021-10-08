@@ -98,6 +98,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+  // 逻辑很简单，就是强制调用watch上的update方法
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
