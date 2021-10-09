@@ -161,8 +161,13 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+/**
+ * 这里的watch队列是一个优化点，并不是每次数据更新都触发watcher回调，而是将watcher
+ * 放入一个队列，然后在nexttick之后执行flushSchedulerQueue
+ */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 使用has对象保证同一个watcher只添加一次
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {

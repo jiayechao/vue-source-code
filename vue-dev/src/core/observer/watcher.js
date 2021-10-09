@@ -23,6 +23,7 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+// 第一件见到这个类就是在mountComponent中，其中传入的expOrFn是一个update函数
 export default class Watcher {
   vm: Component;
   expression: string;
@@ -68,9 +69,14 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
-    this.deps = []
+    this.deps = [] // 表示watcher拥有的dep实例的数组
     this.newDeps = []
-    this.depIds = new Set()
+    this.depIds = new Set() // 表示deps的id的set类型，这里为什么会有连个dep实例数组呢
+    /**
+     * 考虑到 Vue 是数据驱动的，所以每次数据变化都会重新 render，那么 vm._render() 方法又会再次执行，
+     * 并再次触发数据的 getters，所以 Watcher 在构造函数中会初始化 2 个 Dep 实例数组，
+     * newDeps 表示新添加的 Dep 实例数组，而 deps 表示上一次添加的 Dep 实例数组
+     */
     this.newDepIds = new Set()
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
@@ -92,7 +98,7 @@ export default class Watcher {
     }
     this.value = this.lazy
       ? undefined
-      : this.get()
+      : this.get() // 执行get函数
   }
 
   /**
@@ -100,11 +106,13 @@ export default class Watcher {
    */
   // 这里会执行传入的回调updateComponent
   get () {
+    // 压栈，赋值
     pushTarget(this)
     let value
     const vm = this.vm
     try {
-      value = this.getter.call(vm, vm)
+      value = this.getter.call(vm, vm) // 执行回调，也就是vm._update(vm._render(), hydrating)
+      // 优先执行render，此时会访问数据，触发数据对象上的getter
     } catch (e) {
       if (this.user) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -114,10 +122,13 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // 深度监听
       if (this.deep) {
         traverse(value)
       }
+      // 执行完后，这里要出栈，将target恢复为上一个watcher
       popTarget()
+      // 最后执行
       this.cleanupDeps()
     }
     return value
@@ -126,13 +137,15 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
+  // 访问数据触发了get，get会触发dep.depend,实际上就是这个函数
   addDep (dep: Dep) {
     const id = dep.id
-    if (!this.newDepIds.has(id)) {
+    if (!this.newDepIds.has(id)) { // 保证数据不会重复
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
-        dep.addSub(this)
+        dep.addSub(this) // 将watcher推入到持有这个wather的dep的subs中，这个目的是为后续数据变化时候能通知到哪些 subs 做准备。
+        // 这样就完成了所有依赖的收集
       }
     }
   }
@@ -140,12 +153,16 @@ export default class Watcher {
   /**
    * Clean up for dependency collection.
    */
+  /**
+   * 为什么会有这个清楚依赖？设想一下我们通过V-if渲染A和B模板，当渲染A时访问a，
+   * 但是如果我们渲染B时修改了a，此时如果没有清除订阅，就会通过A，浪费资源
+   */
   cleanupDeps () {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
-        dep.removeSub(this)
+        dep.removeSub(this) // 移除subs中订阅的watcher
       }
     }
     let tmp = this.depIds
@@ -154,6 +171,9 @@ export default class Watcher {
     this.newDepIds.clear()
     tmp = this.deps
     this.deps = this.newDeps
+    
+    // 交换depIds和newDepIds，deps和newDeps
+
     this.newDeps = tmp
     this.newDeps.length = 0
   }
@@ -164,6 +184,7 @@ export default class Watcher {
    */
   update () {
     /* istanbul ignore else */
+    // 对于不同的watcher执行不同策略
     if (this.lazy) {
       this.dirty = true
     } else if (this.sync) {

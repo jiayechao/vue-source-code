@@ -143,7 +143,7 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  // 初始化dep实例
+  // 初始化dep实例，每个属性都会有这个
   const dep = new Dep()
   // 拿到属性的描述符
   const property = Object.getOwnPropertyDescriptor(obj, key)
@@ -163,9 +163,10 @@ export function defineReactive (
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
-    // get就是依赖收集
+    // get就是依赖收集。依赖收集我们主要关注就是dep实例，以及depend的收集动作，另外就是childOb的判断
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 在render阶段，访问属性，就会触发这里的depend
       if (Dep.target) {
         dep.depend()
         if (childOb) {
@@ -177,7 +178,7 @@ export function defineReactive (
       }
       return value
     },
-    // set做的就是派发更新
+    // set做的就是派发更新,当我们对数据做了修改就会触发。需要注意两个地方，
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
@@ -195,7 +196,9 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // 将新设置的值变成一个响应式对象
       childOb = !shallow && observe(newVal)
+      // 通知所有的订阅者更新
       dep.notify()
     }
   })
