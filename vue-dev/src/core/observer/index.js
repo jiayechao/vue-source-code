@@ -43,10 +43,11 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+    def(value, '__ob__', this) // 将自身实例添加到value的__ob__上，这就是为什么我们在开发中输出data上对象类型是会有一个__ob__属性
+    // 针对value的类型做不同的操作
     if (Array.isArray(value)) {
       if (hasProto) {
-        protoAugment(value, arrayMethods)
+        protoAugment(value, arrayMethods) // 将value的原型对象指向数组的原型对象
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
@@ -71,6 +72,7 @@ export class Observer {
   /**
    * Observe a list of Array items.
    */
+  // 遍历数组再次调用observe
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
       observe(items[i])
@@ -107,6 +109,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 这个函数就是用来监听数据的变化
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
@@ -121,6 +124,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     Object.isExtensible(value) &&
     !value._isVue
   ) {
+    // 重点在这里
     ob = new Observer(value)
   }
   if (asRootData && ob) {
@@ -139,8 +143,9 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  // 初始化dep实例
   const dep = new Dep()
-
+  // 拿到属性的描述符
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -153,10 +158,12 @@ export function defineReactive (
     val = obj[key]
   }
 
+  // 对子对象递归调用observe，保证obj所有子属性也能响应式
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
+    // get就是依赖收集
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
@@ -170,6 +177,7 @@ export function defineReactive (
       }
       return value
     },
+    // set做的就是派发更新
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */

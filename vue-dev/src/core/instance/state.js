@@ -35,6 +35,8 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// proxy的作用就是将props，data上的属性代理到vm实例上。这就是为什么我们定义了data.prop都能在实例上直接访问
+// 对key的读取变成原来值的读取
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
