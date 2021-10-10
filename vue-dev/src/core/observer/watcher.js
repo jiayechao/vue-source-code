@@ -198,9 +198,13 @@ export default class Watcher {
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
+  /**
+   * 这个是watcher更新的重点函数，实际上就是执行传入的回调
+   */
   run () {
     if (this.active) {
-      const value = this.get()
+      const value = this.get() // 执行get，重新触发getter方法，重走patch。这就是watcher原理
+      // 三个条件：值变化，新值是对象，deep模式
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -210,10 +214,12 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
+        
         const oldValue = this.value
         this.value = value
         if (this.user) {
           try {
+            // 注意，这里会把第一个和第一个参数擦换入心智value和旧值oldVlaue，这也是我们在自定义watch能拿到新旧值的原因
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)

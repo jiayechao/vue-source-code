@@ -70,7 +70,7 @@ if (inBrowser && !isIE) {
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
-  flushing = true
+  flushing = true // 这里设置为true
   let watcher, id
 
   // Sort queue before flush.
@@ -81,10 +81,19 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  /**
+   * 对队列做了排序，主要作用有几点
+   * 1. 组件的更新由父到子，因为父组件的创建过程是先于子的，所以watcher也是
+   * 2. 用户自定义的watcher要优先渲染，因为用户自定义的watcher是在渲染watch之前创建的
+   * 3. 如果一个组件在父组件的watcher执行期间被销毁，那么它对应的watcher都可以被跳过，所以父组件的watcher应该优先执行
+   */
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  /**
+   * 遍历队列，排序后就要做遍历
+   */
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -92,6 +101,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
+    // 拿到wathcer执行run
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -114,6 +124,7 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 状态恢复。就是将一些逻辑值恢复，清空watcher队列
   resetSchedulerState()
 
   // call component updated and activated hooks
@@ -175,6 +186,7 @@ export function queueWatcher (watcher: Watcher) {
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 执行了nextTick后，第二次循环就会走到这里，每次都要对queue.length求值，因为在watcher.run时可能添加进新的watcher
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
@@ -182,6 +194,7 @@ export function queueWatcher (watcher: Watcher) {
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
+    // 通过waiting保证对nextTick的调用只有一次
     if (!waiting) {
       waiting = true
 
@@ -189,6 +202,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 
       nextTick(flushSchedulerQueue)
     }
   }

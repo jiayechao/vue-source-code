@@ -20,6 +20,11 @@
         changeMsg() {
           this.message = 'Hello World!'
         }
+      },
+      watchs: {
+        message(value, oldValue) {
+          console.log('run () ')
+        }
       }
     })
   </script>
