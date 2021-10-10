@@ -46,6 +46,7 @@ export class Observer {
     def(value, '__ob__', this) // 将自身实例添加到value的__ob__上，这就是为什么我们在开发中输出data上对象类型是会有一个__ob__属性
     // 针对value的类型做不同的操作
     if (Array.isArray(value)) {
+       // 实际上就将value的原型指向了arrayMethods
       if (hasProto) {
         protoAugment(value, arrayMethods) // 将value的原型对象指向数组的原型对象
       } else {
@@ -209,6 +210,7 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+// 这是我们的全局$set方法
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
@@ -217,14 +219,15 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
-    target.splice(key, 1, val)
+    target.splice(key, 1, val) // 为什么这样可以？
     return val
   }
+  // 如果key已经存在，直接返回
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
-  const ob = (target: any).__ob__
+  const ob = (target: any).__ob__ // 我们在Observe中将实例赋值给了val.__ob__，如果不存在，说明不是一个响应式对象
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -236,7 +239,9 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target[key] = val
     return val
   }
+  // 将新添加的值组一个响应式转换
   defineReactive(ob.value, key, val)
+  // 手动触发依赖通知
   ob.dep.notify()
   return val
 }
