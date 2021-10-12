@@ -167,7 +167,8 @@ export function defineReactive (
     // get就是依赖收集。依赖收集我们主要关注就是dep实例，以及depend的收集动作，另外就是childOb的判断
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
-      // 在render阶段，访问属性，就会触发这里的depend
+      // 在render阶段，访问属性，就会触发这里的depend。
+      // 将自己的watcher添加到当前渲染watcher中
       if (Dep.target) {
         dep.depend()
         if (childOb) {

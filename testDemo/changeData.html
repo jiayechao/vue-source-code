@@ -9,12 +9,18 @@
 <body>
   <div id="app" @click="changeMsg">
     {{ message }}
+    {{ddd}}
   </div>
   <script>
     var app = new Vue({
       el: '#app',
       data: {
         message: 'Hello Vue!'
+      },
+      computed: {
+        ddd() {
+          return this.message + '!!!'
+        }
       },
       methods: {
         changeMsg() {

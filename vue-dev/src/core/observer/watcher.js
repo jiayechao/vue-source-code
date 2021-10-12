@@ -96,6 +96,7 @@ export default class Watcher {
         )
       }
     }
+    // computed中的watcher传入的是lazy，这里并不会立刻求值
     this.value = this.lazy
       ? undefined
       : this.get() // 执行get函数
@@ -106,12 +107,12 @@ export default class Watcher {
    */
   // 这里会执行传入的回调updateComponent
   get () {
-    // 压栈，赋值
+    // 压栈，赋值，相当于订阅这个watcher
     pushTarget(this)
     let value
     const vm = this.vm
     try {
-      value = this.getter.call(vm, vm) // 执行回调，也就是vm._update(vm._render(), hydrating)
+      value = this.getter.call(vm, vm) // 执行回调，也就是vm._update(vm._render(), hydrating)，计算属性不一样哦
       // 优先执行render，此时会访问数据，触发数据对象上的getter
     } catch (e) {
       if (this.user) {
@@ -185,7 +186,7 @@ export default class Watcher {
   update () {
     /* istanbul ignore else */
     // 对于不同的watcher执行不同策略
-    if (this.lazy) {
+    if (this.lazy) { // 计算属性执行，置为true，当下次访问时再重新求值
       this.dirty = true
     } else if (this.sync) {
       this.run()

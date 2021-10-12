@@ -177,10 +177,11 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
+  // 创建空对象
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
-
+  // 遍历computed属性
   for (const key in computed) {
     const userDef = computed[key]
     const getter = typeof userDef === 'function' ? userDef : userDef.get
@@ -193,6 +194,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // 为每一个属性创建一个watcher，这个是computedWatch，他是和渲染watcher不同的
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -204,6 +206,7 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // 判断属性是不是已经被data或者prop占用
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
@@ -216,6 +219,10 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
+/**
+ * 这个逻辑也很简单，就是将属性转换成响应式，添加getter，setter函数
+ * set一般是在computed属性是一个对象才有的
+ */
 export function defineComputed (
   target: any,
   key: string,
@@ -224,7 +231,7 @@ export function defineComputed (
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = shouldCache
-      ? createComputedGetter(key)
+      ? createComputedGetter(key) // 一般来说，这个是我们开发中最常用的
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
   } else {
@@ -247,16 +254,18 @@ export function defineComputed (
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 可以看到，最终的computed返回的是一个函数。当访问到这计算属性，就会触发这个函数
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
       if (watcher.dirty) {
-        watcher.evaluate()
+        watcher.evaluate() // 去求值，也就是watcher中的get函数，其中会执行回调，也就是计算属性的getter函数
       }
       if (Dep.target) {
         watcher.depend()
       }
+      // 然后返回值
       return watcher.value
     }
   }
