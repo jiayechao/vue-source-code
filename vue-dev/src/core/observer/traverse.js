@@ -29,10 +29,12 @@ function _traverse (val: any, seen: SimpleSet) {
     }
     seen.add(depId)
   }
+  // 对数组重复触发getter，这样就能收益他的依赖
   if (isA) {
     i = val.length
     while (i--) _traverse(val[i], seen)
   } else {
+    // 对对象也是
     keys = Object.keys(val)
     i = keys.length
     while (i--) _traverse(val[keys[i]], seen)

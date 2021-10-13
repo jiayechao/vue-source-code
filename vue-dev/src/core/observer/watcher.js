@@ -55,9 +55,9 @@ export default class Watcher {
       vm._watcher = this
     }
     vm._watchers.push(this)
-    // options
+    // options，我们可以看到watcher有多种类型
     if (options) {
-      this.deep = !!options.deep
+      this.deep = !!options.deep // 对一个对象做深度检测
       this.user = !!options.user
       this.lazy = !!options.lazy
       this.sync = !!options.sync
@@ -188,7 +188,7 @@ export default class Watcher {
     // 对于不同的watcher执行不同策略
     if (this.lazy) { // 计算属性执行，置为true，当下次访问时再重新求值
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { // 一旦我们设置了同步，会直接run，而不是进队列
       this.run()
     } else {
       queueWatcher(this)

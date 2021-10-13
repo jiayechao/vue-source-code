@@ -331,6 +331,7 @@ function createWatcher (
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
+  // 在stateMixins中定义
   return vm.$watch(expOrFn, handler, options)
 }
 
@@ -366,19 +367,22 @@ export function stateMixin (Vue: Class<Component>) {
     options?: Object
   ): Function {
     const vm: Component = this
+    // 用户自己调用时走这里
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
     options.user = true
-    const watcher = new Watcher(vm, expOrFn, cb, options)
+    const watcher = new Watcher(vm, expOrFn, cb, options) // 一种新的watch方式，user watcher
     if (options.immediate) {
+      // 直接触发
       try {
         cb.call(vm, watcher.value)
       } catch (error) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回一个去监听操作
     return function unwatchFn () {
       watcher.teardown()
     }
