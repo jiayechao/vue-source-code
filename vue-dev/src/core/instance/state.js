@@ -64,6 +64,7 @@ export function initState (vm: Component) {
   }
 }
 
+// 这时候props已经被转成了{ key: {type: Type}}的对象，这里初始化
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
@@ -78,6 +79,7 @@ function initProps (vm: Component, propsOptions: Object) {
   // 可以看到遍历props配置。并主要做了两个工作
   for (const key in propsOptions) {
     keys.push(key)
+    // 1. 校验
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {

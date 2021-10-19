@@ -18,6 +18,7 @@ type PropOptions = {
   validator: ?Function
 };
 
+// 校验传入的prop是否符合我们的type
 export function validateProp (
   key: string,
   propOptions: Object,
@@ -27,7 +28,7 @@ export function validateProp (
   const prop = propOptions[key]
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
-  // boolean casting
+  // boolean casting 布尔类型的
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
     if (absent && !hasOwn(prop, 'default')) {

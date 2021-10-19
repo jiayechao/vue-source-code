@@ -299,6 +299,7 @@ export function validateComponentName (name: string) {
  * Ensure all props option syntax are normalized into the
  * Object-based format.
  */
+// 实际上就是将props转成对象形式，因为props还可以写成数组形式
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
@@ -306,16 +307,18 @@ function normalizeProps (options: Object, vm: ?Component) {
   let i, val, name
   if (Array.isArray(props)) {
     i = props.length
+    // 数组形式的props应该是字符串
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
-        name = camelize(val)
-        res[name] = { type: null }
+        name = camelize(val) // 转成驼峰
+        res[name] = { type: null } // 类型为空
       } else if (process.env.NODE_ENV !== 'production') {
         warn('props must be strings when using array syntax.')
       }
     }
   } else if (isPlainObject(props)) {
+    // 对于对象格式，也是基本类似的操作
     for (const key in props) {
       val = props[key]
       name = camelize(key)
@@ -330,7 +333,7 @@ function normalizeProps (options: Object, vm: ?Component) {
       vm
     )
   }
-  options.props = res
+  options.props = res 
 }
 
 /**
@@ -389,7 +392,7 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
-// 从入参和出参看，这个函数就是将parent和child合并
+// 从入参和出参看，这个函数就是将parent和child合并。处理我们定义组件的对象 option，然后挂载到组件的实例 this.$options 中
 export function mergeOptions (
   parent: Object,
   child: Object,
@@ -403,7 +406,7 @@ export function mergeOptions (
     child = child.options
   }
 
-  normalizeProps(child, vm)
+  normalizeProps(child, vm) // 在合并之前需要对props做一个规范话
   normalizeInject(child, vm)
   normalizeDirectives(child)
 

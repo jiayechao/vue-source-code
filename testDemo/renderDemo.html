@@ -10,11 +10,14 @@
   <div id="app"></div>
   <script>
     Vue.component('p-line', {
-      template: `<p>{{line}}</p>`,
+      template: `<p>{{line}}{{msg}}</p>`,
       data() {
         return {
           line: 'line'
         }
+      },
+      props: {
+        msg: Boolean
       }
     })
     var componentA = {
@@ -35,7 +38,11 @@
           },
           [
             '我是一个鱼',
-            createElement('p-line'),
+            createElement('p-line', {
+              props: {
+                msg: true
+              }
+            }),
             createElement('componentA')
           ]
         )
