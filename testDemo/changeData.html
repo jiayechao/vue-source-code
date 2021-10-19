@@ -9,6 +9,7 @@
 <body>
   <div id="app" @click="changeMsg">
     {{ message }}
+    {{ddd}}
   </div>
   <script>
     var app = new Vue({
@@ -16,9 +17,19 @@
       data: {
         message: 'Hello Vue!'
       },
+      computed: {
+        ddd() {
+          return this.message + '!!!'
+        }
+      },
       methods: {
         changeMsg() {
           this.message = 'Hello World!'
+        }
+      },
+      watchs: {
+        message(value, oldValue) {
+          console.log('run () ')
         }
       }
     })

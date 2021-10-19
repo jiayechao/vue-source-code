@@ -28,6 +28,7 @@ methodsToPatch.forEach(function (method) {
     const result = original.apply(this, args)
     const ob = this.__ob__
     let inserted
+    // 可以看到，这里重写了方法
     switch (method) {
       case 'push':
       case 'unshift':
@@ -39,6 +40,7 @@ methodsToPatch.forEach(function (method) {
     }
     if (inserted) ob.observeArray(inserted)
     // notify change
+    // 并且手动出发了依赖通知，这也是为什么可以通过splice修改数据变更试图的原因
     ob.dep.notify()
     return result
   })

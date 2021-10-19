@@ -79,7 +79,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
        */
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
-      // updates
+      // updates 组件更新就走的这里了，因为在第一次new Vue，prevVnode已经有值了
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
@@ -243,6 +243,7 @@ export function mountComponent (
   return vm
 }
 
+// 由于更新了vnode，那么他对应的实例的一系列属性都会发生变化，都有相应的修改
 export function updateChildComponent (
   vm: Component,
   propsData: ?Object,

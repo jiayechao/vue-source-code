@@ -14,6 +14,7 @@ function flushCallbacks () {
   pending = false
   const copies = callbacks.slice(0)
   callbacks.length = 0
+  // 遍历执行回调callbacks，保证所有的任务都在一次nexttick中执行，不会开启多个异步任务
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -39,6 +40,9 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+/**
+ * 针对timerFunc的不同兼容，就是执行flushCallbacks
+ */
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -84,8 +88,10 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+// 这就是我们使用nextTick函数，
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 将回调压入队列中
   callbacks.push(() => {
     if (cb) {
       try {
@@ -99,6 +105,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 执行
     timerFunc()
   }
   // $flow-disable-line

@@ -55,9 +55,9 @@ export default class Watcher {
       vm._watcher = this
     }
     vm._watchers.push(this)
-    // options
+    // options，我们可以看到watcher有多种类型
     if (options) {
-      this.deep = !!options.deep
+      this.deep = !!options.deep // 对一个对象做深度检测
       this.user = !!options.user
       this.lazy = !!options.lazy
       this.sync = !!options.sync
@@ -96,6 +96,7 @@ export default class Watcher {
         )
       }
     }
+    // computed中的watcher传入的是lazy，这里并不会立刻求值
     this.value = this.lazy
       ? undefined
       : this.get() // 执行get函数
@@ -106,12 +107,12 @@ export default class Watcher {
    */
   // 这里会执行传入的回调updateComponent
   get () {
-    // 压栈，赋值
+    // 压栈，赋值，相当于订阅这个watcher
     pushTarget(this)
     let value
     const vm = this.vm
     try {
-      value = this.getter.call(vm, vm) // 执行回调，也就是vm._update(vm._render(), hydrating)
+      value = this.getter.call(vm, vm) // 执行回调，也就是vm._update(vm._render(), hydrating)，计算属性不一样哦
       // 优先执行render，此时会访问数据，触发数据对象上的getter
     } catch (e) {
       if (this.user) {
@@ -185,9 +186,9 @@ export default class Watcher {
   update () {
     /* istanbul ignore else */
     // 对于不同的watcher执行不同策略
-    if (this.lazy) {
+    if (this.lazy) { // 计算属性执行，置为true，当下次访问时再重新求值
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { // 一旦我们设置了同步，会直接run，而不是进队列
       this.run()
     } else {
       queueWatcher(this)
@@ -198,9 +199,13 @@ export default class Watcher {
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
+  /**
+   * 这个是watcher更新的重点函数，实际上就是执行传入的回调
+   */
   run () {
     if (this.active) {
-      const value = this.get()
+      const value = this.get() // 执行get，重新触发getter方法，重走patch。这就是watcher原理
+      // 三个条件：值变化，新值是对象，deep模式
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -210,10 +215,12 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
+        
         const oldValue = this.value
         this.value = value
         if (this.user) {
           try {
+            // 注意，这里会把第一个和第一个参数擦换入心智value和旧值oldVlaue，这也是我们在自定义watch能拿到新旧值的原因
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)

@@ -54,6 +54,7 @@ const componentVNodeHooks = {
     }
   },
 
+  // 会在新旧组件相同的的情况去执行
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions
     const child = vnode.componentInstance = oldVnode.componentInstance
