@@ -58,6 +58,7 @@ const componentVNodeHooks = {
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions
     const child = vnode.componentInstance = oldVnode.componentInstance
+    // 当props变化时，更新子组件
     updateChildComponent(
       child,
       options.propsData, // updated props
@@ -172,7 +173,7 @@ export function createComponent (
     transformModel(Ctor.options, data)
   }
 
-  // extract props
+  // extract props 取出props数据
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component

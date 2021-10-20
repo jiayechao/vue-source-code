@@ -10,14 +10,21 @@
   <div id="app"></div>
   <script>
     Vue.component('p-line', {
-      template: `<p>{{line}}{{msg}}</p>`,
+      template: `<p>{{line}}{{msg}}{{msg2}}</p>`,
       data() {
         return {
           line: 'line'
         }
       },
       props: {
-        msg: Boolean
+        msg: {
+          type: [Number, String],
+          default: 555
+        },
+        msg2: {
+          type: Number,
+          default: 666
+        }
       }
     })
     var componentA = {
@@ -25,22 +32,36 @@
     }
     var vm = new Vue({
       el: '#app',
+      data: {
+        msg: 111,
+        msg2: 222
+      },
       components: {
         'componentA': componentA
       },
+      methods: {
+        clickHandler() {
+          this.msg = '333'
+        }
+      },
       render: (createElement) => {
+        console.log(this.msg,this.msg2)
         return createElement(
           'div',
           {
             attrs: {
               class: 'xxx'
-            }
+            },
+            on: {
+              click: this.clickHandler
+            },
           },
           [
             '我是一个鱼',
             createElement('p-line', {
               props: {
-                msg: true
+                msg: this.msg,
+                msg2: this.msg2
               }
             }),
             createElement('componentA')

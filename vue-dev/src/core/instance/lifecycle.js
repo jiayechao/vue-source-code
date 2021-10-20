@@ -292,11 +292,12 @@ export function updateChildComponent (
   vm.$attrs = parentVnode.data.attrs || emptyObject
   vm.$listeners = listeners || emptyObject
 
-  // update props
+  // update props 
   if (propsData && vm.$options.props) {
     toggleObserving(false)
     const props = vm._props
     const propKeys = vm.$options._propKeys || []
+    // 遍历子组件中的props，重新验证validateProp计算prop的值
     for (let i = 0; i < propKeys.length; i++) {
       const key = propKeys[i]
       const propOptions: any = vm.$options.props // wtf flow?

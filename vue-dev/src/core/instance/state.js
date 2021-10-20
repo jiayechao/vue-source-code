@@ -72,7 +72,8 @@ function initProps (vm: Component, propsOptions: Object) {
   // instead of dynamic object key enumeration.
   const keys = vm.$options._propKeys = []
   const isRoot = !vm.$parent
-  // root instance props should be converted
+  // root instance props should be converted 非根实例我们要将他变成响应式，此时转为false就不会对对象的嵌套子属性做递归？
+  // 因为子组件的props指向父组件的props，只要父组件的props变化，肯定会引发子组件更新，所以可以省略，算一种优化
   if (!isRoot) {
     toggleObserving(false)
   }
@@ -109,11 +110,13 @@ function initProps (vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
-    // 另一个就是通过proxy将vm._props.xxx 的访问代理到 vm.xxx
+    // 另一个就是通过proxy将vm._props.xxx 的访问代理到 vm.xxx，访问vm.xxx相当于访问vm._props.xxx
+    // 对于非根实例的组件，代理的发生实际是在Vue.extend阶段
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
   }
+  // 最后又将它变回来
   toggleObserving(true)
 }
 
