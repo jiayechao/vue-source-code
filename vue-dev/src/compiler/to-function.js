@@ -18,11 +18,12 @@ function createFunction (code, errors) {
   }
 }
 
+// 所以$mounted中最后使用的就是这个函数的返回，Vue.compiler也是。配合compilerAPI食用
 export function createCompileToFunctionFn (compile: Function): Function {
   const cache = Object.create(null)
 
   return function compileToFunctions (
-    template: string,
+    template: string, 
     options?: CompilerOptions,
     vm?: Component
   ): CompiledFunctionResult {
@@ -52,11 +53,12 @@ export function createCompileToFunctionFn (compile: Function): Function {
     const key = options.delimiters
       ? String(options.delimiters) + template
       : template
+      // 可以看到，这里做了缓存优化
     if (cache[key]) {
       return cache[key]
     }
 
-    // compile
+    // compile 核心的程序就一句代码
     const compiled = compile(template, options)
 
     // check compilation errors/tips

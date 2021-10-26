@@ -8,30 +8,36 @@
 </head>
 <body>
   <div id="app" @click="changeMsg">
-    {{ message }}
-    {{ddd}}
+    <p-line :msg="msg" :msg2="msg2"></p-line>
   </div>
   <script>
+    Vue.component('p-line', {
+      template: `<p>{{line}}{{msg}}{{msg2}}</p>`,
+      data() {
+        return {
+          line: 'line'
+        }
+      },
+      props: {
+        msg: {
+          type: [Number, String],
+        },
+        msg2: {
+          type: Number,
+        }
+      }
+    })
     var app = new Vue({
       el: '#app',
       data: {
-        message: 'Hello Vue!'
-      },
-      computed: {
-        ddd() {
-          return this.message + '!!!'
-        }
+        msg: 111,
+        msg2: 222
       },
       methods: {
         changeMsg() {
-          this.message = 'Hello World!'
+          this.msg = 'Hello World!'
         }
       },
-      watchs: {
-        message(value, oldValue) {
-          console.log('run () ')
-        }
-      }
     })
   </script>
 </body>
