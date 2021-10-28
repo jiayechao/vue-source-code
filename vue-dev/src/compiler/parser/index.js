@@ -82,6 +82,7 @@ export function parse (
 ): ASTElement | void {
   warn = options.warn || baseWarn
 
+  // 一下都是针对平台获取一些方法和配置
   platformIsPreTag = options.isPreTag || no
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
@@ -201,6 +202,7 @@ export function parse (
     }
   }
 
+  // 解析html模板
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -396,6 +398,7 @@ export function parse (
       }
     }
   })
+  // 返回AST的根节点
   return root
 }
 
