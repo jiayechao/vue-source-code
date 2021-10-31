@@ -76,12 +76,13 @@ export function createASTElement (
 /**
  * Convert HTML string to AST.
  */
+// 将html模板解析成ast语法树
 export function parse (
   template: string,
   options: CompilerOptions
 ): ASTElement | void {
   warn = options.warn || baseWarn
-
+  // 以下就是拿到和平台相关的一些配置
   platformIsPreTag = options.isPreTag || no
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
@@ -201,6 +202,7 @@ export function parse (
     }
   }
 
+  // 解析HTML模板
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -396,6 +398,7 @@ export function parse (
       }
     }
   })
+  // 输出的是一个根节点
   return root
 }
 
