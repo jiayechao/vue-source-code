@@ -65,7 +65,7 @@ export function parseHTML (html, options) {
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
-        // Comment: 注释匹配
+        // Comment: 注释，一直前进
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
@@ -84,12 +84,13 @@ export function parseHTML (html, options) {
           const conditionalEnd = html.indexOf(']>')
 
           if (conditionalEnd >= 0) {
+            // 条件注释节点也直接前进到最后
             advance(conditionalEnd + 2)
             continue
           }
         }
 
-        // Doctype:
+        // Doctype: 文档类前进到自身长度
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -105,9 +106,10 @@ export function parseHTML (html, options) {
           continue
         }
 
-        // Start tag:
+        // Start tag: 开始标签的处理
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
+          // 处理标签
           handleStartTag(startTagMatch)
           if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
             advance(1)
@@ -187,8 +189,10 @@ export function parseHTML (html, options) {
   }
 
   function parseStartTag () {
+    // 匹配开始标签
     const start = html.match(startTagOpen)
     if (start) {
+      // 创建对象，因为标签还有一些属性
       const match = {
         tagName: start[1],
         attrs: [],
@@ -196,6 +200,7 @@ export function parseHTML (html, options) {
       }
       advance(start[0].length)
       let end, attr
+      // 遍历将属性都添加进去
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
         attr.start = index
         advance(attr[0].length)
@@ -203,8 +208,10 @@ export function parseHTML (html, options) {
         match.attrs.push(attr)
       }
       if (end) {
+        // 匹配到结束时
         match.unarySlash = end[1]
         advance(end[0].length)
+        // 将索引给到结束位置
         match.end = index
         return match
       }
@@ -228,6 +235,7 @@ export function parseHTML (html, options) {
 
     const l = match.attrs.length
     const attrs = new Array(l)
+    // 遍历属性值
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
       const value = args[3] || args[4] || args[5] || ''
@@ -244,11 +252,12 @@ export function parseHTML (html, options) {
       }
     }
 
+    // 判断是不是一元标签，比如<img> <br>这些，然后将他压入栈
     if (!unary) {
       stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
       lastTag = tagName
     }
-
+    // 最后调用了start函数
     if (options.start) {
       options.start(tagName, attrs, unary, match.start, match.end)
     }

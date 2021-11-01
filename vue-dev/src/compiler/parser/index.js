@@ -398,7 +398,7 @@ export function parse (
       }
     }
   })
-  // 输出的是一个根节点
+  // 返回AST的根节点
   return root
 }
 
